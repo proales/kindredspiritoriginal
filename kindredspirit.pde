@@ -20,16 +20,45 @@ final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
 
-/*
-class ScreenStrip {
-  int x, y, numPixels;
-  ScreenStrip(int x, int y, int numPixels) {
+/* Represents a pixel in the KS model. */
+class VirtualPoint {
+  int x, y, z;
+  int currentColor;
+  VirtualPoint(int x, int y, int z) {
     this.x = x;
     this.y = y;
-    this.numPixels = numPixels;
+    this.z = z;
   }
 }
-*/
+
+/* Represents a strip of pixels in the KS model. */
+class VirtualStrip {
+  VirtualPoint wayPoints[];
+  VirtualStrip(VirtualPoint wayPoints[]) {
+    this.wayPoints = wayPoints;
+  }
+}
+
+VirtualStrip ksVirtualStrips[];
+
+void loadModel() {
+  String lines[] = loadStrings("model.csv");
+  List<VirtualStrip> virtualStrips = new ArrayList<VirtualStrip>();
+  for (String line : lines) {
+    String points[] = split(trim(line), ';');
+    List<VirtualPoint> virtualPoints = new ArrayList<VirtualPoint>();
+    for (String point : points) {
+      String pos[] = split(trim(point), ',');
+      int x = int(pos[0]);      
+      int y = int(pos[1]);
+      int z = int(pos[2]);
+      virtualPoints.add(new VirtualPoint(x, y, z));
+    }
+    virtualStrips.add(new VirtualStrip(virtualPoints.toArray(new VirtualPoint[virtualPoints.size()])));
+  }
+  ksVirtualStrips = virtualStrips.toArray(new VirtualStrip[virtualStrips.size()]);
+  println("loadModel: "+ksVirtualStrips.length+" strips loaded");
+}
 
 class Animation {
   String name;
@@ -218,6 +247,7 @@ void setPreviewAnimation(int index) {
 }
 
 void setup() {
+  loadModel();
   titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
   sidebarFont = createFont("Arial", 12, true);
