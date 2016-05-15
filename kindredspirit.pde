@@ -17,8 +17,19 @@ class PixelPusherObserver implements Observer {
 
 final int globalFrameRate = 60;
 final int pixelsPerStrip = 96;
-final int screenWidth = 800;
-final int screenHeight = 600;
+final int myScreenWidth = 800;
+final int myScreenHeight = 600;
+
+/*
+class ScreenStrip {
+  int x, y, numPixels;
+  ScreenStrip(int x, int y, int numPixels) {
+    this.x = x;
+    this.y = y;
+    this.numPixels = numPixels;
+  }
+}
+*/
 
 class Animation {
   String name;
@@ -81,14 +92,8 @@ class SolidAnimation extends Animation {
   }
 }
 
-Animation animations[] = {
-  new OffAnimation (),
-  new SolidAnimation (),
-  new ThumperAnimation ()
-};
-
-final int OFF_INDEX = 0;
-
+// TODO: color picker should only show actual colors supported
+// TODO: should show a box around the color that's currently selected
 public class ColorPicker {
   int x, y, w, h;
   PImage cpImage;
@@ -142,8 +147,26 @@ public class ColorPicker {
   }
 }
 
+String animations[] = {
+  "off",
+  "solid",
+  "thumper"
+};
+
+Animation createAnimation(int i) {
+  switch (animations[i]) {
+  case "off"    : return new OffAnimation();
+  case "solid"  : return new SolidAnimation();
+  case "thumper": return new ThumperAnimation();
+  default:
+    println("*** unknown animation: "+animations[i]);
+    return null;
+  }
+}
+
 Animation live;
 Animation preview;
+
 DeviceRegistry registry;
 PixelPusherObserver observer;
 PFont titleFont;
@@ -154,9 +177,9 @@ ColorPicker liveColorPicker;
 
 final int sidebarWidth = 100;
 final int sidebarTextHeight = 18;
-final int mainAreaWidth = screenWidth-sidebarWidth;
+final int mainAreaWidth = myScreenWidth-sidebarWidth;
 final int paneWidth = mainAreaWidth/2;
-final int paneHeight = screenHeight-15;
+final int paneHeight = myScreenHeight-15;
 final int leftPaneX = sidebarWidth;
 final int rightPaneX = sidebarWidth + paneWidth;
 final int colorPickerHeight = 100;
@@ -166,8 +189,9 @@ ColorPicker placeColorPicker(int x) {
   return new ColorPicker(x, colorPickerY, paneWidth, colorPickerHeight);
 }
 
-void setLiveAnimation(Animation a) {
-  live = a;
+void setLiveAnimation(int index) {
+  Animation animation = createAnimation(index);
+  live = animation;
   if (live.primaryColor != null) {
     liveColorPicker = placeColorPicker(rightPaneX);
   } else {
@@ -175,8 +199,9 @@ void setLiveAnimation(Animation a) {
   }
 }
 
-void setPreviewAnimation(Animation a) {
-  preview = a;
+void setPreviewAnimation(int index) {
+  Animation animation = createAnimation(index);
+  preview = animation;
   if (preview.primaryColor != null) {
     previewColorPicker = placeColorPicker(leftPaneX); 
   } else {
@@ -185,15 +210,15 @@ void setPreviewAnimation(Animation a) {
 }
 
 void setup() {
-  titleFont = createFont("Arial",16,true);
+  titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
   sidebarFont = createFont("Arial", 12, true);
   size(800, 600);
   stroke(255);
   background(0, 0, 0);
   frameRate(globalFrameRate);
-  setLiveAnimation(animations[OFF_INDEX]);
-  setPreviewAnimation(animations[OFF_INDEX]);
+  setLiveAnimation(0);
+  setPreviewAnimation(0);
   registry = new DeviceRegistry();
   observer = new PixelPusherObserver();
   registry.addObserver(observer);
@@ -226,7 +251,7 @@ void drawSidebar() {
     } else {
       fill(0x99, 0x99, 0x99);
     }
-    text(animations[i].name, 0, y+sidebarTextHeight);
+    text(animations[i], 0, y+sidebarTextHeight);
   }
 }
 
@@ -281,10 +306,11 @@ void mouseClicked() {
   /* was a sidebar animation clicked? */
   for (int i = 0; i < animations.length; i++) {
     if (isSidebarItemHovered(i)) {
-      setPreviewAnimation(animations[i]);
+      setPreviewAnimation(i);
       break;
     }
   }
+  // TODO: factor out
   /* was the preview color picker clicked? */
   if (previewColorPicker != null) {
     if (mouseX >= previewColorPicker.x
