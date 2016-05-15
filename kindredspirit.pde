@@ -37,7 +37,7 @@ class Animation {
   int logicalClock;
   int lastFrameCount;
   public Integer primaryColor;
-  
+
   void resetClock() {
     logicalClock = 0;
     lastFrameCount = frameCount;
@@ -74,7 +74,7 @@ class ThumperAnimation extends Animation {
     primaryColor = null;
   }
   int getPixelColor(int _controller, int _strip, int index) {
-     if ((logicalClock % pixelsPerStrip) == index) { 
+     if ((logicalClock % pixelsPerStrip) == index) {
        return thumperPurple;
      } else {
        return 0x000000;
@@ -145,6 +145,14 @@ public class ColorPicker {
   public void draw() {
     image(cpImage, x, y);
   }
+  public Integer getColorOverMouse() {
+    if (mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y+h) {
+      return new Integer(get(mouseX, mouseY));
+    } else {
+      //  mouse isn't over this color picker
+      return null;
+    }
+  }
 }
 
 String animations[] = {
@@ -203,7 +211,7 @@ void setPreviewAnimation(int index) {
   Animation animation = createAnimation(index);
   preview = animation;
   if (preview.primaryColor != null) {
-    previewColorPicker = placeColorPicker(leftPaneX); 
+    previewColorPicker = placeColorPicker(leftPaneX);
   } else {
     previewColorPicker = null;
   }
@@ -222,7 +230,7 @@ void setup() {
   registry = new DeviceRegistry();
   observer = new PixelPusherObserver();
   registry.addObserver(observer);
-} 
+}
 
 void drawTitle() {
   textFont(titleFont);
@@ -261,7 +269,7 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
   } else {
     fill(0x99, 0x99, 0x99);
     line(leftSide, colorPickerY, leftSide+paneWidth, colorPickerY+colorPickerHeight);
-    line(leftSide+paneWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight); 
+    line(leftSide+paneWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight);
   }
 }
 
@@ -270,7 +278,7 @@ void drawDemo(String which, Animation animation, ColorPicker colorPicker,
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
-  drawColorSelector(animation, colorPicker, x); 
+  drawColorSelector(animation, colorPicker, x);
 }
 
 void sendState(Animation animation) {
@@ -291,44 +299,36 @@ void sendState(Animation animation) {
 
 void draw() {
   background(0);
-  drawTitle(); 
+  drawTitle();
   drawSidebar();
-  
+
   preview.tick();
   live.tick();
-  
+
   drawDemo("preview", preview, previewColorPicker, leftPaneX, 30, paneWidth, paneHeight);
   drawDemo("live", live, liveColorPicker, rightPaneX, 30, paneWidth, paneHeight);
   sendState(live);
 }
 
 void mouseClicked() {
-  /* was a sidebar animation clicked? */
+  /* Was a sidebar list item clicked? */
   for (int i = 0; i < animations.length; i++) {
     if (isSidebarItemHovered(i)) {
       setPreviewAnimation(i);
       break;
     }
   }
-  // TODO: factor out
-  /* was the preview color picker clicked? */
   if (previewColorPicker != null) {
-    if (mouseX >= previewColorPicker.x
-      && mouseX < previewColorPicker.x+previewColorPicker.w
-      && mouseY >= previewColorPicker.y
-      && mouseY < previewColorPicker.y+previewColorPicker.h) {
-      preview.primaryColor = get(mouseX, mouseY);
-      println("primary color change: "+preview.primaryColor);
+    Integer changeColor = previewColorPicker.getColorOverMouse();
+    if (changeColor == null) {
+      preview.primaryColor = changeColor;
+      println("preview color change: "+changeColor);
     }
-  }
-  /* was the live color picker clicked? */
-  if (liveColorPicker != null) {
-    if (mouseX >= liveColorPicker.x
-      && mouseX < liveColorPicker.x+liveColorPicker.w
-      && mouseY >= liveColorPicker.y
-      && mouseY < liveColorPicker.y+liveColorPicker.h) {
-      live.primaryColor = get(mouseX, mouseY);
-      println("live color change: "+live.primaryColor);
+  } else if (liveColorPicker != null) {
+    Integer changeColor = liveColorPicker.getColorOverMouse();
+    if (changeColor == null) {
+      live.primaryColor = changeColor;
+      println("live color change: "+changeColor);
     }
   }
 }
