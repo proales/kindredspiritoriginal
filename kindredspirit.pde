@@ -160,17 +160,16 @@ final int paneHeight = screenHeight-15;
 final int leftPaneX = sidebarWidth;
 final int rightPaneX = sidebarWidth + paneWidth;
 final int colorPickerHeight = 100;
+final int colorPickerY = paneHeight-(colorPickerHeight+30);
 
-ColorPicker placeColorPicker(int x, int w) {
-  return new ColorPicker(x, paneHeight-(colorPickerHeight+30),
-                         paneWidth, colorPickerHeight);
-                         
+ColorPicker placeColorPicker(int x) {
+  return new ColorPicker(x, colorPickerY, paneWidth, colorPickerHeight);
 }
 
 void setLiveAnimation(Animation a) {
   live = a;
   if (live.primaryColor != null) {
-    liveColorPicker = placeColorPicker(rightPaneX, paneWidth);
+    liveColorPicker = placeColorPicker(rightPaneX);
   } else {
     liveColorPicker = null;
   }
@@ -179,7 +178,7 @@ void setLiveAnimation(Animation a) {
 void setPreviewAnimation(Animation a) {
   preview = a;
   if (preview.primaryColor != null) {
-    previewColorPicker = placeColorPicker(leftPaneX, paneWidth); 
+    previewColorPicker = placeColorPicker(leftPaneX); 
   } else {
     previewColorPicker = null;
   }
@@ -231,10 +230,22 @@ void drawSidebar() {
   }
 }
 
-void drawDemo(String which, Animation animation, int x, int y, int w, int h) {
+void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
+  if (colorPicker != null) {
+    colorPicker.draw();
+  } else {
+    fill(0x99, 0x99, 0x99);
+    line(leftSide, colorPickerY, leftSide+paneWidth, colorPickerY+colorPickerHeight);
+    line(leftSide+paneWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight); 
+  }
+}
+
+void drawDemo(String which, Animation animation, ColorPicker colorPicker,
+              int x, int y, int w, int h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
+  drawColorSelector(animation, colorPicker, x); 
 }
 
 void sendState(Animation animation) {
@@ -252,6 +263,7 @@ void sendState(Animation animation) {
   }
 }
 
+
 void draw() {
   background(0);
   drawTitle(); 
@@ -260,14 +272,8 @@ void draw() {
   preview.tick();
   live.tick();
   
-  drawDemo("preview", preview, leftPaneX, 30, paneWidth, paneHeight);
-  if (previewColorPicker != null) {
-    previewColorPicker.draw();
-  }
-  drawDemo("live", live, rightPaneX, 30, paneWidth, paneHeight);
-  if (liveColorPicker != null) {
-    liveColorPicker.draw();
-  }
+  drawDemo("preview", preview, previewColorPicker, leftPaneX, 30, paneWidth, paneHeight);
+  drawDemo("live", live, liveColorPicker, rightPaneX, 30, paneWidth, paneHeight);
   sendState(live);
 }
 
