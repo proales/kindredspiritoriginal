@@ -17,13 +17,16 @@ class PixelPusherObserver implements Observer {
 
 final int globalFrameRate = 60;
 final int pixelsPerStrip = 96;
+final int screenWidth = 800;
+final int screenHeight = 600;
 
 class Animation {
   String name;
   int speedPct;
   int logicalClock;
   int lastFrameCount;
-  Integer primaryColor;
+  public Integer primaryColor;
+  
   void resetClock() {
     logicalClock = 0;
     lastFrameCount = frameCount;
@@ -69,9 +72,9 @@ class ThumperAnimation extends Animation {
 }
 
 class SolidAnimation extends Animation {
-  int primaryColor = 0x009900;
   SolidAnimation() {
     name = "solid";
+    primaryColor = 0x009900;
   }
   int getPixelColor(int _controller, int _strip, int _index) {
     return primaryColor;
@@ -87,9 +90,8 @@ Animation animations[] = {
 final int OFF_INDEX = 0;
 
 public class ColorPicker {
-  int x, y, w, h, c;
+  int x, y, w, h;
   PImage cpImage;
-
   public ColorPicker(int x, int y, int w, int h) {
     this.x = x;
     this.y = y;
@@ -122,7 +124,9 @@ public class ColorPicker {
     float deltaG = green(c2) - green(c1);
     float deltaB = blue(c2) - blue(c1);
     for (int j = y; j < (y+h); j++) {
-      int c = color(red(c1)+(j-y)*(deltaR/h), green(c1)+(j-y)*(deltaG/h), blue(c1)+(j-y)*(deltaB/h));
+      int c = color(red(c1)+(j-y)*(deltaR/h),
+                    green(c1)+(j-y)*(deltaG/h),
+                    blue(c1)+(j-y)*(deltaB/h));
       cpImage.set(x, j, c);
     }
   }
@@ -135,23 +139,7 @@ public class ColorPicker {
   }
   public void draw() {
     image(cpImage, x, y);
-    /*if (mousePressed &&
-        mouseX >= x &&
-        mouseX < x + w &&
-        mouseY >= y &&
-        mouseY < y + h) {
-        c = get( mouseX, mouseY );
-    }
-    fill(c);
-    rect(x, y+h+10, 20, 20);
-    */
   }
-  /*
-  public void fillUp () {
-    fill(c);
-    rect(x, y+h+10, 20, 20);
-  }
-  */
 }
 
 Animation live;
@@ -166,16 +154,26 @@ ColorPicker liveColorPicker;
 
 final int sidebarWidth = 100;
 final int sidebarTextHeight = 18;
-final int mainAreaWidth = width-sidebarWidth;
-final int paneWidth = width-sidebarWidth;
-final int paneHeight = height-15;
+final int mainAreaWidth = screenWidth-sidebarWidth;
+final int paneWidth = mainAreaWidth/2;
+final int paneHeight = screenHeight-15;
 final int leftPaneX = sidebarWidth;
 final int rightPaneX = sidebarWidth + paneWidth;
-final int colorPickerHeight = 300;
+final int colorPickerHeight = 100;
 
 ColorPicker placeColorPicker(int x, int w) {
-  ColorPicker cp = new ColorPicker(x, paneHeight-(colorPickerHeight+30), paneWidth, colorPickerHeight);
-  return cp;
+  return new ColorPicker(x, paneHeight-(colorPickerHeight+30),
+                         paneWidth, colorPickerHeight);
+                         
+}
+
+void setLiveAnimation(Animation a) {
+  live = a;
+  if (live.primaryColor != null) {
+    liveColorPicker = placeColorPicker(rightPaneX, paneWidth);
+  } else {
+    liveColorPicker = null;
+  }
 }
 
 void setPreviewAnimation(Animation a) {
@@ -195,8 +193,8 @@ void setup() {
   stroke(255);
   background(0, 0, 0);
   frameRate(globalFrameRate);
-  live = animations[OFF_INDEX];
-  preview = animations[OFF_INDEX];
+  setLiveAnimation(animations[OFF_INDEX]);
+  setPreviewAnimation(animations[OFF_INDEX]);
   registry = new DeviceRegistry();
   observer = new PixelPusherObserver();
   registry.addObserver(observer);
@@ -221,7 +219,6 @@ boolean isSidebarItemHovered(int i) {
 void drawSidebar() {
   textFont(sidebarFont);
   for (int i = 0; i < animations.length; i++) {
-    int x = 0;
     int y = sidebarTextHeight * i;
     if (isSidebarItemHovered(i)) {
       fill(0x00, 0x99, 0x00);
@@ -234,15 +231,13 @@ void drawSidebar() {
   }
 }
 
-void drawDemo(String which, Animation animation, int x, int y, int w, int h)
-{
+void drawDemo(String which, Animation animation, int x, int y, int w, int h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
 }
 
-void sendState(Animation animation)
-{
+void sendState(Animation animation) {
   if (!observer.hasStrips) {
     //println("observer.hasStrips is false; no strips available?");
     return;
@@ -291,6 +286,7 @@ void mouseClicked() {
       && mouseY >= previewColorPicker.y
       && mouseY < previewColorPicker.y+previewColorPicker.h) {
       preview.primaryColor = get(mouseX, mouseY);
+      println("primary color change: "+preview.primaryColor);
     }
   }
   /* was the live color picker clicked? */
@@ -299,12 +295,10 @@ void mouseClicked() {
       && mouseX < liveColorPicker.x+liveColorPicker.w
       && mouseY >= liveColorPicker.y
       && mouseY < liveColorPicker.y+liveColorPicker.h) {
-      preview.primaryColor = get(mouseX, mouseY);
+      live.primaryColor = get(mouseX, mouseY);
+      println("live color change: "+live.primaryColor);
     }
   }
-
-  println("screen: width="+width+", height="+height);
-  println("mouse clicked: x="+mouseX+", y="+mouseY); 
 }
 
 void keyPressed() {
