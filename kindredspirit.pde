@@ -45,7 +45,12 @@ void loadModel() {
   String lines[] = loadStrings("model.csv");
   List<VirtualStrip> virtualStrips = new ArrayList<VirtualStrip>();
   for (String line : lines) {
-    String points[] = split(trim(line), ';');
+    String[] parts = split(trim(line), "|");
+    String controllerAndStripId[] = split(trim(parts[0]), ":");
+    int controllerId = int(controllerAndStripId[0]);
+    int stripId = int(controllerAndStripId[1]);
+    println("loadModel: controller:strip="+controllerId+":"+stripId);
+    String points[] = split(trim(parts[1]), ';');
     List<VirtualPoint> virtualPoints = new ArrayList<VirtualPoint>();
     for (String point : points) {
       String pos[] = split(trim(point), ',');
@@ -53,6 +58,10 @@ void loadModel() {
       int y = int(pos[1]);
       int z = int(pos[2]);
       virtualPoints.add(new VirtualPoint(x, y, z));
+    }
+    if (virtualPoints.size() < 2) {
+      println("!!! too few waypoints: " + virtualPoints.size());
+      // TODO: blowup
     }
     virtualStrips.add(new VirtualStrip(virtualPoints.toArray(new VirtualPoint[virtualPoints.size()])));
   }
