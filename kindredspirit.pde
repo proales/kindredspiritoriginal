@@ -45,6 +45,9 @@ void loadModel() {
   String lines[] = loadStrings("model.csv");
   List<VirtualStrip> virtualStrips = new ArrayList<VirtualStrip>();
   for (String line : lines) {
+    line = trim(line);
+    if (line.equals("") || line.charAt(0) == '#') continue;
+    
     String[] parts = split(trim(line), "|");
     String controllerAndStripId[] = split(trim(parts[0]), ":");
     int controllerId = int(controllerAndStripId[0]);
