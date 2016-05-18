@@ -49,6 +49,10 @@ void loadModel() {
     if (line.equals("") || line.charAt(0) == '#') continue;
     
     String[] parts = split(trim(line), "|");
+    if (parts.length != 2) {
+      println("*** line "+line+" split on | into too many parts: "+parts.length);
+      exit();
+    }
     String controllerAndStripId[] = split(trim(parts[0]), ":");
     int controllerId = int(controllerAndStripId[0]);
     int stripId = int(controllerAndStripId[1]);
@@ -258,7 +262,7 @@ void setPreviewAnimation(int index) {
   }
 }
 
-void setup() {
+void setup()  {
   loadModel();
   titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
