@@ -23,7 +23,6 @@ final int myScreenHeight = 600;
 /* Represents a pixel in the KS model. */
 class VirtualPoint {
   int x, y, z;
-  int currentColor;
   VirtualPoint(int x, int y, int z) {
     this.x = x;
     this.y = y;
@@ -325,6 +324,25 @@ void drawDemo(String which, Animation animation, ColorPicker colorPicker,
   fill(255);
   text(which+": "+animation.name, x, y);
   drawColorSelector(animation, colorPicker, x);
+  
+  int xoff = x;
+  int yoff = y+30;
+  for (VirtualStrip vstrip : ksVirtualStrips) {
+    Integer last_xx = null;
+    Integer last_yy = null;
+    // TODO(mbac): need a way to approximate LED spots on strips
+    //  roughly, it's 10 pixels per foot
+    for (VirtualPoint vpixel : vstrip.wayPoints) {
+      int xx = vpixel.x * 10;
+      int yy = vpixel.y * 10;
+      if (last_xx != null && last_yy != null) {
+        fill(255);
+        line(xoff+last_xx, yoff+last_yy, xoff+xx, yoff+yy);       
+      }
+      last_xx = xx;
+      last_yy = yy;
+    }
+  }
 }
 
 void sendState(Animation animation) {

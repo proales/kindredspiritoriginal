@@ -1,5 +1,7 @@
+##
+## driver side, z-plane: +400 (4 feet from middle of dance floor)
+##
 
-# driver/business side, z-plane: +400 (4 feet from center of car)
 # controller 0, covering driver-side exterior, front
 0:0|0,10,400;4,9,400;0,13,400;6,10,400
 0:1|4,9,400;0,4,400;1,2,400;0,0,400
