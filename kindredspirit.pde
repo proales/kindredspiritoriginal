@@ -15,20 +15,22 @@ class PixelPusherObserver implements Observer {
   }
 }
 
-final int globalFrameRate = 60;
+final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
 
 /* Represents a pixel in the KS model. Directly corresponds to a controller/strip/index. */
 class VirtualPixel {
-  int controllerId;
-  int stripId;
-  int x, y, z;
+  final int controllerId;
+  final int stripId;
+  final int pixelId;
+  final int x, y, z;
   int currentColor;
-  VirtualPixel(int controllerId, int stripId, int x, int y, int z) {
+  VirtualPixel(int controllerId, int stripId, int pixelId, int x, int y, int z) {
     this.controllerId = controllerId;
     this.stripId = stripId;
+    this.pixelId = pixelId;
     this.x = x;
     this.y = y;
     this.z = z;
@@ -38,7 +40,7 @@ class VirtualPixel {
 
 /* Represents a waypoint in the KS model. */
 class VirtualWayPoint {
-  int x, y, z;
+  final int x, y, z;
   VirtualWayPoint(int x, int y, int z) {
     this.x = x;
     this.y = y;
@@ -48,8 +50,8 @@ class VirtualWayPoint {
 
 /* Represents a strip of pixels in the KS model. */
 class VirtualStrip {
-  int controllerId;
-  int stripId;
+  final int controllerId;
+  final int stripId;
   VirtualWayPoint wayPoints[];
   VirtualStrip(int controllerId, int stripId, VirtualWayPoint wayPoints[]) {
     this.controllerId = controllerId;
@@ -60,6 +62,7 @@ class VirtualStrip {
 
 VirtualStrip ksVirtualStrips[];
 VirtualPixel ksVirtualPixels[];
+int controllerStripMap[][][];
 
 void loadModel() {
   String lines[] = loadStrings("model.csv");
@@ -78,7 +81,7 @@ void loadModel() {
     int stripId = int(controllerAndStripId[1]);
     println("loadModel: controller:strip="+controllerId+":"+stripId);
     String points[] = split(trim(parts[1]), ';');
-    List<VirtualWayPoint> virtualPoints = new ArrayList<VirtualPoint>();
+    List<VirtualWayPoint> virtualPoints = new ArrayList<VirtualWayPoint>();
     // the unit distance between waypoints is in feet in this sketch we
     // approximate 10 pixels per foot, so that's why we multiply by 10
     for (String point : points) {
@@ -86,14 +89,14 @@ void loadModel() {
       int x = int(pos[0]) * 10;
       int y = int(pos[1]) * 10;
       int z = int(pos[2]) * 10;
-      virtualPoints.add(new VirtualPoint(x, y, z));
+      virtualPoints.add(new VirtualWayPoint(x, y, z));
     }
     if (virtualPoints.size() < 2) {
       println("!!! too few waypoints: " + virtualPoints.size());
       // TODO: blowup
     }
     VirtualStrip vs = new VirtualStrip(controllerId, stripId,
-        virtualPoints.toArray(new VirtualPoint[virtualPoints.size()]));
+        virtualPoints.toArray(new VirtualWayPoint[virtualPoints.size()]));
     virtualStrips.add(vs);
   }
   ksVirtualStrips = virtualStrips.toArray(new VirtualStrip[virtualStrips.size()]);
@@ -101,8 +104,8 @@ void loadModel() {
 }
 
 class Coordinate {
-  int x; int y; int z;
-  Coodinate(int x, int y, int z) {
+  final int x, y, z;
+  Coordinate(int x, int y, int z) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -116,7 +119,7 @@ int signum(float f) {
 }
 
 // the internet says this is "bresenham's". whatevs.
-List<Coordinate> line3d(startx, int starty, int startz, int endx, int endy, int endz) {
+List<Coordinate> line3d(int startx, int starty, int startz, int endx, int endy, int endz) {
   int dx = endx - startx;
   int dy = endy - starty;
   int dz = endz - startz;
@@ -130,7 +133,7 @@ List<Coordinate> line3d(startx, int starty, int startz, int endx, int endy, int 
   int y = starty;
   int z = startz;
   int deltax, deltay, deltaz;
-  List<Coordinate> results;
+  List<Coordinate> results = new ArrayList<Coordinate>();
   if (ax >= max(ay, az)) /* x dominant */ {
     deltay = ay - (ax >> 1);
     deltaz = az - (ax >> 1);
@@ -190,22 +193,43 @@ List<Coordinate> line3d(startx, int starty, int startz, int endx, int endy, int 
 }
 
 void rasterizeModelToPixels() {
-  List<VirtualPixel> virtualPixels;
+  List<VirtualPixel> virtualPixels = new ArrayList<VirtualPixel>();
   for (VirtualStrip strip : ksVirtualStrips) {
     VirtualWayPoint prev = null;
+    int pixelId = 0;
     for (VirtualWayPoint wayPoint : strip.wayPoints) {
-      if (prev == null) {
-        prev = wayPoint;
-        continue;
+      if (prev != null) {
+        VirtualWayPoint cur = wayPoint;
+        for (Coordinate coord : line3d(prev.x, prev.y, prev.z, cur.x, cur.y, cur.z)) {
+          virtualPixels.add(new VirtualPixel(strip.controllerId, strip.stripId,
+                                             pixelId, coord.x, coord.y, coord.z));
+          pixelId++;
+        }
       }
-      VirtualWayPoint cur = wayPoint;
-      for (Coordinate coord : line3d(prev.x, prev.y, prev.z, cur.x, cur.y, cur.z)) {
-        virtualPixels.add(new VirtualPixel(strip.controllerId, strip.stripId, coord.x, coord.y, coord.z));
-      }
+      prev = wayPoint;
     }
   }
   ksVirtualPixels = virtualPixels.toArray(new VirtualPixel[virtualPixels.size()]);
   println("rasterizeModelToPixels: "+ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
+}
+
+void initControllerStripMap() {
+  int maxControllerId = -1;
+  int maxStripId = -1;
+  int maxPixelId = -1;
+  for (VirtualPixel vp : ksVirtualPixels) {
+    if (vp.controllerId > maxControllerId) maxControllerId = vp.controllerId;
+    if (vp.stripId > maxStripId) maxStripId = vp.stripId;
+    if (vp.pixelId > maxPixelId) maxPixelId = vp.pixelId;
+  }
+  controllerStripMap = new int[maxControllerId+1][maxStripId+1][maxPixelId+1];
+  for (int i = 0; i < ksVirtualPixels.length; i++) {
+    VirtualPixel vp = ksVirtualPixels[i];
+    controllerStripMap[vp.controllerId][vp.stripId][vp.pixelId] = i;
+  }
+  if (maxPixelId >= pixelsPerStrip) {
+    println("*** maxPixelId("+maxPixelId+") > pixelsPerStrip("+pixelsPerStrip+")");
+  }
 }
 
 class Animation {
@@ -214,22 +238,34 @@ class Animation {
   int logicalClock;
   int lastFrameCount;
   public Integer primaryColor;
-
+  VirtualPixel pixels[];  
+  Animation() {
+    // each animation gets a deep copy of the KS pixel model
+   this.pixels =  new VirtualPixel[ksVirtualPixels.length];
+   for (int i = 0; i < ksVirtualPixels.length; i++) {
+     VirtualPixel src = ksVirtualPixels[i];
+     pixels[i] = new VirtualPixel(src.controllerId, src.stripId, src.pixelId,
+                                  src.x, src.y, src.z);
+   }
+  }
   void resetClock() {
     logicalClock = 0;
     lastFrameCount = frameCount;
   }
   void tick() {
+    logicalClock++;
+    /*
     int frameDelta = frameCount-lastFrameCount;
     float ticksPerSecond = float(globalFrameRate) * (float(speedPct)/100.0);
     float framesPerTick = float(globalFrameRate) / ticksPerSecond;
     lastFrameCount = frameCount;
     if (frameDelta < framesPerTick) return;
     logicalClock++;
+    */
   }
   int getPixelColor(int controller, int strip, int index) {
-    println("base.getPixelColor: "+controller+", "+strip+", "+index);
-    return 0;
+    int i = controllerStripMap[controller][strip][index];
+    return pixels[i].currentColor;
   }
 }
 
@@ -239,9 +275,6 @@ class OffAnimation extends Animation {
     speedPct = 50;
     primaryColor = null;
   }
-  int getPixelColor(int _controller, int _strip, int _index) {
-    return 0x000000;
-  }
 }
 
 class ThumperAnimation extends Animation {
@@ -250,12 +283,15 @@ class ThumperAnimation extends Animation {
     name = "thumper";
     primaryColor = null;
   }
-  int getPixelColor(int _controller, int _strip, int index) {
-     if ((logicalClock % pixelsPerStrip) == index) {
-       return thumperPurple;
-     } else {
-       return 0x000000;
-     }
+  void tick() {
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      if ((logicalClock % pixelsPerStrip) == vp.pixelId) {
+        vp.currentColor = thumperPurple;
+      } else {
+        vp.currentColor = 0x000000;
+      }
+    }
   }
 }
 
@@ -264,8 +300,11 @@ class SolidAnimation extends Animation {
     name = "solid";
     primaryColor = 0x009900;
   }
-  int getPixelColor(int _controller, int _strip, int _index) {
-    return primaryColor;
+  void tick() {
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      vp.currentColor = primaryColor;
+    }
   }
 }
 
@@ -379,6 +418,7 @@ void setLiveAnimation(int index) {
   live = animation;
   if (live.primaryColor != null) {
     liveColorPicker = placeColorPicker(rightPaneX);
+    live.primaryColor = preview.primaryColor;
   } else {
     liveColorPicker = null;
   }
@@ -397,6 +437,7 @@ void setPreviewAnimation(int index) {
 void setup()  {
   loadModel();
   rasterizeModelToPixels();
+  initControllerStripMap();
   titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
   sidebarFont = createFont("Arial", 12, true);
@@ -446,25 +487,31 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
   if (colorPicker != null) {
     colorPicker.draw();
   } else {
-    fill(0x99, 0x99, 0x99);
+    stroke(0x99, 0x99, 0x99);
     line(leftSide, colorPickerY, leftSide+paneWidth, colorPickerY+colorPickerHeight);
     line(leftSide+paneWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight);
   }
 }
 
 void drawDemo(String which, Animation animation, ColorPicker colorPicker,
-              int x, int y, int w, int h) {
+              int x, int y, int _w, int _h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
   drawColorSelector(animation, colorPicker, x);
-
   int xoff = x;
   int yoff = y+30;
-  for (VirtualPixel vpixel : ksVirtualPixels) {
-    fill(255);
-    point(xoff+vpixel.x,yoff+vpixel.y);
+  strokeWeight(2);
+  for (VirtualPixel vpixel : animation.pixels) {
+    int c = vpixel.currentColor;
+    if (c == 0) continue; // no need to render black
+    int r = (c >> 16) & 0xFF;
+    int g = (c >> 8) & 0xFF;
+    int b = c & 0xFF;
+    stroke(r, g, b);
+    point(xoff+vpixel.x, yoff+vpixel.y);
   }
+  strokeWeight(1);
 }
 
 void sendState(Animation animation) {
@@ -494,6 +541,7 @@ void draw() {
   drawDemo("preview", preview, previewColorPicker, leftPaneX, 30, paneWidth, paneHeight);
   drawDemo("live", live, liveColorPicker, rightPaneX, 30, paneWidth, paneHeight);
   sendState(live);
+  //println("frameRate: "+frameRate);
 }
 
 void mouseClicked() {
@@ -506,13 +554,14 @@ void mouseClicked() {
   }
   if (previewColorPicker != null) {
     Integer changeColor = previewColorPicker.getColorOverMouse();
-    if (changeColor == null) {
+    if (changeColor != null) {
       preview.primaryColor = changeColor;
       println("preview color change: "+changeColor);
     }
-  } else if (liveColorPicker != null) {
+  }
+  if (liveColorPicker != null) {
     Integer changeColor = liveColorPicker.getColorOverMouse();
-    if (changeColor == null) {
+    if (changeColor != null) {
       live.primaryColor = changeColor;
       println("live color change: "+changeColor);
     }
@@ -520,5 +569,14 @@ void mouseClicked() {
 }
 
 void keyPressed() {
-  println("keyPressed: "+key);
+  if (key == '\n') {
+    for (int i = 0; i < animations.length; i++) {
+      if (preview.name == animations[i]) {
+        setLiveAnimation(i);
+        break;
+      }
+    }
+  } else {
+    println("unknown keyPressed: "+key);
+  }
 }
