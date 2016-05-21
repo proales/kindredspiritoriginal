@@ -531,6 +531,22 @@ void sendState(Animation animation) {
 
 
 void draw() {
+  if (mousePressed) { // support dragging
+    if (previewColorPicker != null) {
+      Integer changeColor = previewColorPicker.getColorOverMouse();
+      if (changeColor != null) {
+        preview.primaryColor = changeColor;
+        println("preview color change: "+changeColor);
+      }
+    }
+    if (liveColorPicker != null) {
+      Integer changeColor = liveColorPicker.getColorOverMouse();
+      if (changeColor != null) {
+        live.primaryColor = changeColor;
+        println("live color change: "+changeColor);
+      }
+    }
+  }
   background(0);
   drawTitle();
   drawSidebar();
@@ -550,20 +566,6 @@ void mouseClicked() {
     if (isSidebarItemHovered(i)) {
       setPreviewAnimation(i);
       break;
-    }
-  }
-  if (previewColorPicker != null) {
-    Integer changeColor = previewColorPicker.getColorOverMouse();
-    if (changeColor != null) {
-      preview.primaryColor = changeColor;
-      println("preview color change: "+changeColor);
-    }
-  }
-  if (liveColorPicker != null) {
-    Integer changeColor = liveColorPicker.getColorOverMouse();
-    if (changeColor != null) {
-      live.primaryColor = changeColor;
-      println("live color change: "+changeColor);
     }
   }
 }
