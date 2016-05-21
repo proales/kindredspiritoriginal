@@ -22,6 +22,7 @@ class Animation {
   Animation() {
     // each animation gets a deep copy of the KS pixel model
    this.pixels =  new VirtualPixel[ksVirtualPixels.length];
+   this.speedPct = 50;
    for (int i = 0; i < ksVirtualPixels.length; i++) {
      VirtualPixel src = ksVirtualPixels[i];
      pixels[i] = new VirtualPixel(src.controllerId, src.stripId, src.pixelId,
@@ -33,15 +34,11 @@ class Animation {
     lastFrameCount = frameCount;
   }
   void tick() {
-    logicalClock++;
-    /*
     int frameDelta = frameCount-lastFrameCount;
-    float ticksPerSecond = float(globalFrameRate) * (float(speedPct)/100.0);
-    float framesPerTick = float(globalFrameRate) / ticksPerSecond;
-    lastFrameCount = frameCount;
+    float framesPerTick = (globalFrameRate/4.0) - (float(globalFrameRate) * (float(speedPct)/100.0));
     if (frameDelta < framesPerTick) return;
+    lastFrameCount = frameCount;
     logicalClock++;
-    */
   }
   int getPixelColor(int controller, int strip, int index) {
     int i = controllerStripMap[controller][strip][index];
@@ -64,6 +61,7 @@ class ThumperAnimation extends Animation {
   ThumperAnimation() {
     name = "thumper";
     primaryColor = null;
+    speedPct = 50;
     for (VirtualPixel vp : pixels) {
       if (vp.y > maxy) maxy = vp.y;
       if (vp.y < miny) miny = vp.y;
@@ -149,11 +147,16 @@ class NoiseAnimation extends Animation {
   NoiseAnimation() {
     name = "noise";
     primaryColor = null;
+    speedPct = 10;
   }
   void tick() {
     super.tick();
     for (VirtualPixel vp : pixels) {
-      vp.currentColor = makeRGB(int(random(255)), int(random(255)), int(random(255)));
+      if (random(100) < speedPct) {
+        vp.currentColor = makeRGB(int(random(255)), int(random(255)), int(random(255)));
+      } else {
+        vp.currentColor = 0;
+      }
     }
   }
 }

@@ -233,8 +233,6 @@ void initControllerStripMap() {
   }
 }
 
-
-
 Animation live;
 Animation preview;
 
@@ -342,10 +340,11 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
 }
 
 void drawDemo(String which, Animation animation, ColorPicker colorPicker,
-              int x, int y, int _w, int _h) {
+              int x, int y, int w, int _h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
+  drawSlider(animation, x, w);
   drawColorSelector(animation, colorPicker, x);
   int xoff = x;
   int yoff = y+30;
@@ -426,6 +425,7 @@ void keyPressed() {
     for (int i = 0; i < animations.length; i++) {
       if (preview.name == animations[i]) {
         setLiveAnimation(i);
+        live.speedPct = preview.speedPct;
         break;
       }
     }
