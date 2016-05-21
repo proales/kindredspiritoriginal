@@ -96,7 +96,7 @@ void loadModel() {
     }
     if (virtualPoints.size() < 2) {
       println("!!! too few waypoints: " + virtualPoints.size());
-      // TODO: blowup
+      exit();
     }
     VirtualStrip vs = new VirtualStrip(controllerId, stripId,
         virtualPoints.toArray(new VirtualWayPoint[virtualPoints.size()]));
@@ -384,6 +384,7 @@ void drawSidebar() {
     int y = sidebarTextHeight * i;
     if (isSidebarItemHovered(i)) {
       fill(0x00, 0x99, 0x00);
+      stroke(0xFF, 0xFF, 0xFF);
       rect(0, y+2, sidebarWidth-5, sidebarTextHeight+2);
       fill(0xFF, 0xFF, 0xFF);
     } else {
