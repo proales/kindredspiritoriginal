@@ -21,6 +21,8 @@ final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
 
+int makeRGB(int r, int g, int b) { return (r << 16) | (g << 8) | b; }
+  
 /* Represents a pixel in the KS model. Directly corresponds to a controller/strip/index. */
 class VirtualPixel {
   final int controllerId;
@@ -322,6 +324,19 @@ class SolidAnimation extends Animation {
   }
 }
 
+class NoiseAnimation extends Animation {
+  NoiseAnimation() {
+    name = "noise";
+    primaryColor = null;
+  }
+  void tick() {
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      vp.currentColor = makeRGB(int(random(255)), int(random(255)), int(random(255)));
+    }
+  }
+}
+
 // TODO: color picker should only show actual colors supported
 // TODO: should show a box around the color that's currently selected?
 public class ColorPicker {
@@ -388,7 +403,8 @@ public class ColorPicker {
 String animations[] = {
   "off",
   "solid",
-  "thumper"
+  "thumper",
+  "noise",
 };
 
 Animation createAnimation(int i) {
@@ -396,6 +412,7 @@ Animation createAnimation(int i) {
   case "off"    : return new OffAnimation();
   case "solid"  : return new SolidAnimation();
   case "thumper": return new ThumperAnimation();
+  case "noise"  : return new NoiseAnimation();
   default:
     println("*** unknown animation: "+animations[i]);
     return null;
@@ -546,8 +563,7 @@ void sendState(Animation animation) {
       int rr = int(r * (1.0 - globalShadeFactor));
       int gg = int(g * (1.0 - globalShadeFactor));
       int bb = int(b * (1.0 - globalShadeFactor));
-      int cc = (rr << 16) | (gg << 8) | bb;
-      strip.setPixel(cc, i);
+      strip.setPixel(makeRGB(rr, gg, bb), i);
     }
   }
 }
