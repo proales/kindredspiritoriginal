@@ -490,7 +490,7 @@ void mouseClicked() {
 }
 
 void keyPressed() {
-  if (key == '\n') {
+  if (keyCode == ENTER || keyCode == RETURN) {
     for (int i = 0; i < animations.length; i++) {
       if (preview.name == animations[i]) {
         setLiveAnimation(i);
