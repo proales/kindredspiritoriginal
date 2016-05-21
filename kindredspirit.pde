@@ -20,10 +20,26 @@ final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
 
-/* Represents a pixel in the KS model. */
-class VirtualPoint {
+/* Represents a pixel in the KS model. Directly corresponds to a controller/strip/index. */
+class VirtualPixel {
+  int controllerId;
+  int stripId;
   int x, y, z;
-  VirtualPoint(int x, int y, int z) {
+  int currentColor;
+  VirtualPixel(int controllerId, int stripId, int x, int y, int z) {
+    this.controllerId = controllerId;
+    this.stripId = stripId;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.currentColor = 0;
+  }
+}
+
+/* Represents a waypoint in the KS model. */
+class VirtualWayPoint {
+  int x, y, z;
+  VirtualWayPoint(int x, int y, int z) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -32,13 +48,18 @@ class VirtualPoint {
 
 /* Represents a strip of pixels in the KS model. */
 class VirtualStrip {
-  VirtualPoint wayPoints[];
-  VirtualStrip(VirtualPoint wayPoints[]) {
+  int controllerId;
+  int stripId;
+  VirtualWayPoint wayPoints[];
+  VirtualStrip(int controllerId, int stripId, VirtualWayPoint wayPoints[]) {
+    this.controllerId = controllerId;
+    this.stripId = stripId;
     this.wayPoints = wayPoints;
   }
 }
 
 VirtualStrip ksVirtualStrips[];
+VirtualPixel ksVirtualPixels[];
 
 void loadModel() {
   String lines[] = loadStrings("model.csv");
@@ -46,7 +67,7 @@ void loadModel() {
   for (String line : lines) {
     line = trim(line);
     if (line.equals("") || line.charAt(0) == '#') continue;
-    
+
     String[] parts = split(trim(line), "|");
     if (parts.length != 2) {
       println("*** line "+line+" split on | into too many parts: "+parts.length);
@@ -57,22 +78,134 @@ void loadModel() {
     int stripId = int(controllerAndStripId[1]);
     println("loadModel: controller:strip="+controllerId+":"+stripId);
     String points[] = split(trim(parts[1]), ';');
-    List<VirtualPoint> virtualPoints = new ArrayList<VirtualPoint>();
+    List<VirtualWayPoint> virtualPoints = new ArrayList<VirtualPoint>();
+    // the unit distance between waypoints is in feet in this sketch we
+    // approximate 10 pixels per foot, so that's why we multiply by 10
     for (String point : points) {
       String pos[] = split(trim(point), ',');
-      int x = int(pos[0]);      
-      int y = int(pos[1]);
-      int z = int(pos[2]);
+      int x = int(pos[0]) * 10;
+      int y = int(pos[1]) * 10;
+      int z = int(pos[2]) * 10;
       virtualPoints.add(new VirtualPoint(x, y, z));
     }
     if (virtualPoints.size() < 2) {
       println("!!! too few waypoints: " + virtualPoints.size());
       // TODO: blowup
     }
-    virtualStrips.add(new VirtualStrip(virtualPoints.toArray(new VirtualPoint[virtualPoints.size()])));
+    VirtualStrip vs = new VirtualStrip(controllerId, stripId,
+        virtualPoints.toArray(new VirtualPoint[virtualPoints.size()]));
+    virtualStrips.add(vs);
   }
   ksVirtualStrips = virtualStrips.toArray(new VirtualStrip[virtualStrips.size()]);
   println("loadModel: "+ksVirtualStrips.length+" strips loaded");
+}
+
+class Coordinate {
+  int x; int y; int z;
+  Coodinate(int x, int y, int z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+}
+
+int signum(float f) {
+  if (f > 0) return 1;
+  if (f < 0) return -1;
+  return 0;
+}
+
+// the internet says this is "bresenham's". whatevs.
+List<Coordinate> line3d(startx, int starty, int startz, int endx, int endy, int endz) {
+  int dx = endx - startx;
+  int dy = endy - starty;
+  int dz = endz - startz;
+  int ax = abs(dx) << 1;
+  int ay = abs(dy) << 1;
+  int az = abs(dz) << 1;
+  int signx = (int) signum(dx);
+  int signy = (int) signum(dy);
+  int signz = (int) signum(dz);
+  int x = startx;
+  int y = starty;
+  int z = startz;
+  int deltax, deltay, deltaz;
+  List<Coordinate> results;
+  if (ax >= max(ay, az)) /* x dominant */ {
+    deltay = ay - (ax >> 1);
+    deltaz = az - (ax >> 1);
+    while (true) {
+      results.add(new Coordinate(x, y, z));
+      if (x == endx) return results;
+      if (deltay >= 0) {
+        y += signy;
+        deltay -= ax;
+      }
+      if (deltaz >= 0) {
+        z += signz;
+        deltaz -= ax;
+      }
+      x += signx;
+      deltay += ay;
+      deltaz += az;
+    }
+  } else if (ay >= max(ax, az)) /* y dominant */ {
+    deltax = ax - (ay >> 1);
+    deltaz = az - (ay >> 1);
+    while (true) {
+      results.add(new Coordinate(x,y,z));
+      if (y == endy) return results;
+      if (deltax >= 0) {
+        x += signx;
+        deltax -= ay;
+      }
+      if (deltaz >= 0) {
+        z += signz;
+        deltaz -= ay;
+      }
+      y += signy;
+      deltax += ax;
+      deltaz += az;
+    }
+  } else if (az >= max(ax, ay)) /* z dominant */ {
+    deltax = ax - (az >> 1);
+    deltay = ay - (az >> 1);
+    while (true) {
+      results.add(new Coordinate(x,y,z));
+      if (z == endz) return results;
+      if (deltax >= 0) {
+        x += signx;
+        deltax -= az;
+      }
+      if (deltay >= 0) {
+        y += signy;
+        deltay -= az;
+      }
+      z += signz;
+      deltax += ax;
+      deltay += ay;
+    }
+  }
+  return results;
+}
+
+void rasterizeModelToPixels() {
+  List<VirtualPixel> virtualPixels;
+  for (VirtualStrip strip : ksVirtualStrips) {
+    VirtualWayPoint prev = null;
+    for (VirtualWayPoint wayPoint : strip.wayPoints) {
+      if (prev == null) {
+        prev = wayPoint;
+        continue;
+      }
+      VirtualWayPoint cur = wayPoint;
+      for (Coordinate coord : line3d(prev.x, prev.y, prev.z, cur.x, cur.y, cur.z)) {
+        virtualPixels.add(new VirtualPixel(strip.controllerId, strip.stripId, coord.x, coord.y, coord.z));
+      }
+    }
+  }
+  ksVirtualPixels = virtualPixels.toArray(new VirtualPixel[virtualPixels.size()]);
+  println("rasterizeModelToPixels: "+ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
 }
 
 class Animation {
@@ -263,6 +396,7 @@ void setPreviewAnimation(int index) {
 
 void setup()  {
   loadModel();
+  rasterizeModelToPixels();
   titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
   sidebarFont = createFont("Arial", 12, true);
@@ -324,24 +458,12 @@ void drawDemo(String which, Animation animation, ColorPicker colorPicker,
   fill(255);
   text(which+": "+animation.name, x, y);
   drawColorSelector(animation, colorPicker, x);
-  
+
   int xoff = x;
   int yoff = y+30;
-  for (VirtualStrip vstrip : ksVirtualStrips) {
-    Integer last_xx = null;
-    Integer last_yy = null;
-    // TODO(mbac): need a way to approximate LED spots on strips
-    //  roughly, it's 10 pixels per foot
-    for (VirtualPoint vpixel : vstrip.wayPoints) {
-      int xx = vpixel.x * 10;
-      int yy = vpixel.y * 10;
-      if (last_xx != null && last_yy != null) {
-        fill(255);
-        line(xoff+last_xx, yoff+last_yy, xoff+xx, yoff+yy);       
-      }
-      last_xx = xx;
-      last_yy = yy;
-    }
+  for (VirtualPixel vpixel : ksVirtualPixels) {
+    fill(255);
+    point(xoff+vpixel.x,yoff+vpixel.y);
   }
 }
 
