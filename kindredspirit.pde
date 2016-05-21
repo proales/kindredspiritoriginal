@@ -15,6 +15,7 @@ class PixelPusherObserver implements Observer {
   }
 }
 
+final float globalShadeFactor = 0.05;
 final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
@@ -279,14 +280,27 @@ class OffAnimation extends Animation {
 
 class ThumperAnimation extends Animation {
   final int thumperPurple = 0x660E6F;
+  int miny = 0;
+  int maxy = 0;
   ThumperAnimation() {
     name = "thumper";
     primaryColor = null;
+    for (VirtualPixel vp : pixels) {
+      if (vp.y > maxy) maxy = vp.y;
+      if (vp.y < miny) miny = vp.y;
+    }
   }
   void tick() {
     super.tick();
+    // rain effect
+    int numBuckets = pixelsPerStrip;
+    int yRange = maxy - miny;
+    int activeBucket = logicalClock % numBuckets;
+    float bucketHeight = float(yRange) / float(numBuckets);
+    float yActiveStart = miny + (activeBucket*bucketHeight);
+    float yActiveEnd = yActiveStart + bucketHeight;
     for (VirtualPixel vp : pixels) {
-      if ((logicalClock % pixelsPerStrip) == vp.pixelId) {
+      if (vp.y >= yActiveStart && vp.y < yActiveEnd) {
         vp.currentColor = thumperPurple;
       } else {
         vp.currentColor = 0x000000;
@@ -309,7 +323,7 @@ class SolidAnimation extends Animation {
 }
 
 // TODO: color picker should only show actual colors supported
-// TODO: should show a box around the color that's currently selected
+// TODO: should show a box around the color that's currently selected?
 public class ColorPicker {
   int x, y, w, h;
   PImage cpImage;
@@ -322,7 +336,7 @@ public class ColorPicker {
     init();
   }
   private void init () {
-    int cw = w - 60;
+    int cw = w - 30;
     for (int i = 0; i < cw; i++) {
       float nColorPercent = i / (float)cw;
       float rad = (-360 * nColorPercent) * (PI / 180);
@@ -333,8 +347,8 @@ public class ColorPicker {
       setGradient(i, 0, 1, h/2, 0xFFFFFF, nColor);
       setGradient(i, (h/2), 1, h/2, nColor, 0x000000);
     }
-    drawRect(cw, 0,   30, h/2, 0xFFFFFF);
-    drawRect(cw, h/2, 30, h/2, 0);
+    //drawRect(cw, 0,   30, h/2, 0xFFFFFF);
+    //drawRect(cw, h/2, 30, h/2, 0);
     for (int j = 0; j < h; j++) {
       int g = 255 - (int)(j/(float)(h-1) * 255 );
       drawRect(w-30, j, 30, 1, color( g, g, g ));
@@ -501,7 +515,7 @@ void drawDemo(String which, Animation animation, ColorPicker colorPicker,
   drawColorSelector(animation, colorPicker, x);
   int xoff = x;
   int yoff = y+30;
-  strokeWeight(2);
+  strokeWeight(4);
   for (VirtualPixel vpixel : animation.pixels) {
     int c = vpixel.currentColor;
     if (c == 0) continue; // no need to render black
@@ -522,9 +536,18 @@ void sendState(Animation animation) {
   registry.startPushing();
   registry.setAutoThrottle(true);
   for (Strip strip : registry.getStrips()) {
+    int controllerId = strip.getPusher().getControllerOrdinal();
+    int stripId = strip.getStripNumber();
     for (int i = 0; i < strip.getLength(); i++) {
-      int c = animation.getPixelColor(0, 0, i);
-      strip.setPixel(c, i);
+      int c = animation.getPixelColor(controllerId, stripId, i);
+      int r = (c >> 16) & 0xFF;
+      int g = (c >> 8) & 0xFF;
+      int b = c & 0xFF;
+      int rr = int(r * (1.0 - globalShadeFactor));
+      int gg = int(g * (1.0 - globalShadeFactor));
+      int bb = int(b * (1.0 - globalShadeFactor));
+      int cc = (rr << 16) | (gg << 8) | bb;
+      strip.setPixel(cc, i);
     }
   }
 }
