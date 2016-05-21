@@ -20,8 +20,6 @@ final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
-
-int makeRGB(int r, int g, int b) { return (r << 16) | (g << 8) | b; }
   
 /* Represents a pixel in the KS model. Directly corresponds to a controller/strip/index. */
 class VirtualPixel {
@@ -425,6 +423,7 @@ void drawDemo(String which, Animation animation, ColorPicker colorPicker,
   strokeWeight(1);
 }
 
+
 void sendState(Animation animation) {
   if (!observer.hasStrips) {
     //println("observer.hasStrips is false; no strips available?");
@@ -437,13 +436,7 @@ void sendState(Animation animation) {
     int stripId = strip.getStripNumber();
     for (int i = 0; i < strip.getLength(); i++) {
       int c = animation.getPixelColor(controllerId, stripId, i);
-      int r = (c >> 16) & 0xFF;
-      int g = (c >> 8) & 0xFF;
-      int b = c & 0xFF;
-      int rr = int(r * (1.0 - globalShadeFactor));
-      int gg = int(g * (1.0 - globalShadeFactor));
-      int bb = int(b * (1.0 - globalShadeFactor));
-      strip.setPixel(makeRGB(rr, gg, bb), i);
+      strip.setPixel(shade(c, globalShadeFactor), i);
     }
   }
 }

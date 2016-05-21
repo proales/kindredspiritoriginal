@@ -1,3 +1,17 @@
+int makeRGB(int r, int g, int b) {
+  return (r << 16) | (g << 8) | b;
+}
+
+int shade(int c, float shadeFactor) {
+  int r = (c >> 16) & 0xFF;
+  int g = (c >> 8) & 0xFF;
+  int b = c & 0xFF;
+  int rr = int(r * (1.0 - shadeFactor));
+  int gg = int(g * (1.0 - shadeFactor));
+  int bb = int(b * (1.0 - shadeFactor));
+   return makeRGB(rr, gg, bb);
+}
+
 class Animation {
   String name;
   int speedPct;
@@ -87,6 +101,50 @@ class SolidAnimation extends Animation {
   }
 }
 
+class SolidGlowAnimation extends Animation {
+  SolidGlowAnimation() {
+    name = "solidglow";
+    primaryColor = 0x009900;
+  }
+  void tick() {
+    super.tick();
+    int phase = logicalClock % 200;
+    if (phase > 100) { phase = 100 - (phase-100); }
+    int c = shade(primaryColor, 1.0 - (float(phase) / 100.0));
+    for (VirtualPixel vp : pixels) {
+      vp.currentColor = c;
+    }
+  }
+}
+class ScanAnimation extends Animation {
+  int minX = 0;
+  int maxX = 0;
+  ScanAnimation() {
+    name = "scan";
+    primaryColor = 0x009900;
+    for (VirtualPixel vp : pixels) {
+      if (vp.x > maxX) maxX = vp.x;
+      if (vp.x < minX) minX = vp.x;
+    }
+  }
+  void tick() {
+    super.tick();
+    int numBuckets = 100;
+    int xRange = maxX - minX;
+    int activeBucket = logicalClock % numBuckets;
+    float bucketHeight = float(xRange) / float(numBuckets);
+    float xActiveStart = minX + (activeBucket*bucketHeight);
+    float xActiveEnd = xActiveStart + bucketHeight;
+    for (VirtualPixel vp : pixels) {
+      if (vp.x >= xActiveStart && vp.x < xActiveEnd) {
+        vp.currentColor = primaryColor;
+      } else {
+        vp.currentColor = 0x000000;
+      }
+    }
+  }
+}
+
 class NoiseAnimation extends Animation {
   NoiseAnimation() {
     name = "noise";
@@ -103,18 +161,23 @@ class NoiseAnimation extends Animation {
 String animations[] = {
   "off",
   "solid",
-  "thumper",
+  "solidglow",
+  "scan",
   "noise",
+  "thumper",
 };
 
 Animation createAnimation(int i) {
   switch (animations[i]) {
   case "off"    : return new OffAnimation();
   case "solid"  : return new SolidAnimation();
-  case "thumper": return new ThumperAnimation();
+  case "solidglow" : return new SolidGlowAnimation();
+  case "scan"   : return new ScanAnimation();
   case "noise"  : return new NoiseAnimation();
+  case "thumper": return new ThumperAnimation();
   default:
     println("*** unknown animation: "+animations[i]);
+    exit();
     return null;
   }
 }
