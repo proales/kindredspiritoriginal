@@ -35,7 +35,7 @@ class Animation {
   }
   void tick() {
     int frameDelta = frameCount-lastFrameCount;
-    float framesPerTick = (globalFrameRate/4.0) - (float(globalFrameRate) * (float(speedPct)/100.0));
+    float framesPerTick = (float(globalFrameRate)/2.0) - (float(globalFrameRate) * (float(speedPct)/100.0));
     if (frameDelta < framesPerTick) return;
     lastFrameCount = frameCount;
     logicalClock++;
@@ -146,6 +146,24 @@ class ScanAnimation extends Animation {
 class NoiseAnimation extends Animation {
   NoiseAnimation() {
     name = "noise";
+    primaryColor = 0x009900;
+    speedPct = 10;
+  }
+  void tick() {
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      if (random(100) < speedPct) {
+        vp.currentColor = primaryColor;
+      } else {
+        vp.currentColor = 0;
+      }
+    }
+  }
+}
+
+class RandomNoiseAnimation extends Animation {
+  RandomNoiseAnimation() {
+    name = "randomnoise";
     primaryColor = null;
     speedPct = 10;
   }
@@ -167,6 +185,7 @@ String animations[] = {
   "solidglow",
   "scan",
   "noise",
+  "randomnoise",
   "thumper",
 };
 
@@ -177,6 +196,7 @@ Animation createAnimation(int i) {
   case "solidglow" : return new SolidGlowAnimation();
   case "scan"   : return new ScanAnimation();
   case "noise"  : return new NoiseAnimation();
+  case "randomnoise"  : return new RandomNoiseAnimation();
   case "thumper": return new ThumperAnimation();
   default:
     println("*** unknown animation: "+animations[i]);

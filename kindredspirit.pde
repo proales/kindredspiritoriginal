@@ -15,7 +15,7 @@ class PixelPusherObserver implements Observer {
   }
 }
 
-final float globalShadeFactor = 0.05;
+final float globalShadeFactor = 0.85;
 final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
@@ -301,6 +301,8 @@ void drawTitle() {
   textFont(titleFont);
   fill(255);
   text("Kindred Spirit Lighting Console", sidebarWidth, 15);
+  textFont(sidebarFont);
+  text("fps: "+int(frameRate), width-50, 15);
 }
 
 boolean isSidebarItemHovered(int i) {
