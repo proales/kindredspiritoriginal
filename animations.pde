@@ -9,7 +9,7 @@ int shade(int c, float shadeFactor) {
   int rr = int(r * (1.0 - shadeFactor));
   int gg = int(g * (1.0 - shadeFactor));
   int bb = int(b * (1.0 - shadeFactor));
-   return makeRGB(rr, gg, bb);
+  return makeRGB(rr, gg, bb);
 }
 
 class Animation {
@@ -108,6 +108,7 @@ class SolidGlowAnimation extends Animation {
     }
   }
 }
+
 class ScanAnimation extends Animation {
   ScanAnimation() {
     name = "scan";
