@@ -20,21 +20,36 @@ final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 600;
-  
+
+class Coordinate {
+  final float x, y, z;
+  Coordinate(float x, float y, float z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+  float distance(Coordindate b) {
+    Coordinate a = this;
+    float dx = b.x - a.x;
+    float dy = b.y - a.y;
+    float dz = b.z - a.z;
+    return sqrt(pow(dx,2) + pow(dy,2) + pow(dz,2));
+  }
+}
+
+
 /* Represents a pixel in the KS model. Directly corresponds to a controller/strip/index. */
 class VirtualPixel {
   final int controllerId;
   final int stripId;
   final int pixelId;
-  final int x, y, z;
+  final Coordinate coord;
   int currentColor;
   VirtualPixel(int controllerId, int stripId, int pixelId, int x, int y, int z) {
     this.controllerId = controllerId;
     this.stripId = stripId;
     this.pixelId = pixelId;
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.coord = new Coordinate(x, y, z);
     this.currentColor = 0;
   }
 }
@@ -42,10 +57,9 @@ class VirtualPixel {
 /* Represents a waypoint in the KS model. */
 class VirtualWayPoint {
   final int x, y, z;
+  final Coordinate coord;
   VirtualWayPoint(int x, int y, int z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.coord = new Coordinate(x, y, z);
   }
 }
 
@@ -64,6 +78,8 @@ class VirtualStrip {
 VirtualStrip ksVirtualStrips[];
 VirtualPixel ksVirtualPixels[];
 int controllerStripMap[][][];
+float minX, maxX;
+float minY, maxY;
 
 void loadModel() {
   String lines[] = loadStrings("model.csv");
@@ -83,8 +99,8 @@ void loadModel() {
     println("loadModel: controller:strip="+controllerId+":"+stripId);
     String points[] = split(trim(parts[1]), ';');
     List<VirtualWayPoint> virtualPoints = new ArrayList<VirtualWayPoint>();
-    // the unit distance between waypoints is in feet in this sketch we
-    // approximate 10 pixels per foot, so that's why we multiply by 10
+    // The unit distance between waypoints is in feet.  In this sketch we
+    // approximate 10 pixels per foot, so that's why we multiply by 10.
     for (String point : points) {
       String pos[] = split(trim(point), ',');
       int x = int(pos[0]) * 10;
@@ -102,15 +118,6 @@ void loadModel() {
   }
   ksVirtualStrips = virtualStrips.toArray(new VirtualStrip[virtualStrips.size()]);
   println("loadModel: "+ksVirtualStrips.length+" strips loaded");
-}
-
-class Coordinate {
-  final int x, y, z;
-  Coordinate(int x, int y, int z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
 }
 
 int signum(float f) {
@@ -212,6 +219,13 @@ void rasterizeModelToPixels() {
   }
   ksVirtualPixels = virtualPixels.toArray(new VirtualPixel[virtualPixels.size()]);
   println("rasterizeModelToPixels: "+ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
+
+  for (VirtualPixel vp : ksVirtualPixels) {
+    if (vp.coord.y > maxY) maxY = vp.coord.y;
+    if (vp.coord.y < minY) minY = vp.coord.y;
+    if (vp.coord.x > maxX) maxX = vp.coord.x;
+    if (vp.coord.x < minX) minX = vp.coord.x;
+  }
 }
 
 void initControllerStripMap() {

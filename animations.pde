@@ -18,7 +18,7 @@ class Animation {
   int logicalClock;
   int lastFrameCount;
   public Integer primaryColor;
-  VirtualPixel pixels[];  
+  VirtualPixel pixels[];
   Animation() {
     // each animation gets a deep copy of the KS pixel model
    this.pixels =  new VirtualPixel[ksVirtualPixels.length];
@@ -26,7 +26,7 @@ class Animation {
    for (int i = 0; i < ksVirtualPixels.length; i++) {
      VirtualPixel src = ksVirtualPixels[i];
      pixels[i] = new VirtualPixel(src.controllerId, src.stripId, src.pixelId,
-                                  src.x, src.y, src.z);
+                                  src.coord.x, src.coord.y, src.coord.z);
    }
   }
   void resetClock() {
@@ -56,25 +56,19 @@ class OffAnimation extends Animation {
 
 class ThumperAnimation extends Animation {
   final int thumperPurple = 0x660E6F;
-  int miny = 0;
-  int maxy = 0;
   ThumperAnimation() {
     name = "thumper";
     primaryColor = null;
     speedPct = 50;
-    for (VirtualPixel vp : pixels) {
-      if (vp.y > maxy) maxy = vp.y;
-      if (vp.y < miny) miny = vp.y;
-    }
   }
   void tick() {
     super.tick();
     // rain effect
     int numBuckets = pixelsPerStrip;
-    int yRange = maxy - miny;
+    int yRange = maxY - minY;
     int activeBucket = logicalClock % numBuckets;
     float bucketHeight = float(yRange) / float(numBuckets);
-    float yActiveStart = miny + (activeBucket*bucketHeight);
+    float yActiveStart = minY + (activeBucket*bucketHeight);
     float yActiveEnd = yActiveStart + bucketHeight;
     for (VirtualPixel vp : pixels) {
       if (vp.y >= yActiveStart && vp.y < yActiveEnd) {
@@ -115,15 +109,9 @@ class SolidGlowAnimation extends Animation {
   }
 }
 class ScanAnimation extends Animation {
-  int minX = 0;
-  int maxX = 0;
   ScanAnimation() {
     name = "scan";
     primaryColor = 0x009900;
-    for (VirtualPixel vp : pixels) {
-      if (vp.x > maxX) maxX = vp.x;
-      if (vp.x < minX) minX = vp.x;
-    }
   }
   void tick() {
     super.tick();
@@ -134,7 +122,7 @@ class ScanAnimation extends Animation {
     float xActiveStart = minX + (activeBucket*bucketHeight);
     float xActiveEnd = xActiveStart + bucketHeight;
     for (VirtualPixel vp : pixels) {
-      if (vp.x >= xActiveStart && vp.x < xActiveEnd) {
+      if (vp.coord.x >= xActiveStart && vp.coord.x < xActiveEnd) {
         vp.currentColor = primaryColor;
       } else {
         vp.currentColor = 0x000000;
