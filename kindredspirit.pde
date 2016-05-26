@@ -147,8 +147,8 @@ PixelPusherObserver observer;
 PFont titleFont;
 PFont subtitleFont;
 PFont sidebarFont;
-ColorPicker previewColorPicker;
-ColorPicker liveColorPicker;
+ColorPicker previewPrimaryColorPicker, previewSecondaryColorPicker;
+ColorPicker livePrimaryColorPicker, liveSecondaryColorPicker;
 
 final int sidebarWidth = 100;
 final int sidebarTextHeight = 18;
@@ -157,21 +157,28 @@ final int paneWidth = mainAreaWidth/2;
 final int paneHeight = myScreenHeight-15;
 final int leftPaneX = sidebarWidth;
 final int rightPaneX = sidebarWidth + paneWidth;
+final int colorPickerWidth = paneWidth/2;
 final int colorPickerHeight = 100;
 final int colorPickerY = paneHeight-(colorPickerHeight+30);
 
 ColorPicker placeColorPicker(int x) {
-  return new ColorPicker(x, colorPickerY, paneWidth, colorPickerHeight);
+  return new ColorPicker(x, colorPickerY, colorPickerWidth, colorPickerHeight);
 }
 
 void setLiveAnimation(int index) {
   Animation animation = createAnimation(index);
   live = animation;
   if (live.primaryColor != null) {
-    liveColorPicker = placeColorPicker(rightPaneX);
+    livePrimaryColorPicker = placeColorPicker(rightPaneX);
     live.primaryColor = preview.primaryColor;
   } else {
-    liveColorPicker = null;
+    livePrimaryColorPicker = null;
+  }
+  if (live.secondaryColor != null) {
+    liveSecondaryColorPicker = placeColorPicker(rightPaneX+colorPickerWidth);
+    live.secondaryColor = preview.primaryColor;
+  } else {
+    liveSecondaryColorPicker = null;
   }
 }
 
@@ -179,9 +186,14 @@ void setPreviewAnimation(int index) {
   Animation animation = createAnimation(index);
   preview = animation;
   if (preview.primaryColor != null) {
-    previewColorPicker = placeColorPicker(leftPaneX);
+    previewPrimaryColorPicker = placeColorPicker(leftPaneX);
   } else {
-    previewColorPicker = null;
+    previewPrimaryColorPicker = null;
+  }
+  if (preview.secondaryColor != null) {
+    previewSecondaryColorPicker = placeColorPicker(leftPaneX+colorPickerWidth);
+  } else {
+    previewSecondaryColorPicker = null;
   }
 }
 
@@ -242,18 +254,19 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
     colorPicker.draw();
   } else {
     stroke(0x99, 0x99, 0x99);
-    line(leftSide, colorPickerY, leftSide+paneWidth, colorPickerY+colorPickerHeight);
-    line(leftSide+paneWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight);
+    line(leftSide, colorPickerY, leftSide+colorPickerwWidth, colorPickerY+colorPickerHeight);
+    line(leftSide+colorPickerWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight);
   }
 }
 
-void drawDemo(String which, Animation animation, ColorPicker colorPicker,
-              int x, int y, int w, int _h) {
+void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
+              ColorPicker secondaryColorPicker, int x, int y, int w, int _h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
   drawSlider(animation, x, w);
-  drawColorSelector(animation, colorPicker, x);
+  drawColorSelector(animation, primaryColorPicker, x);
+  drawColorSelector(animation, secondaryColorPicker, x+colorPickerWidth);
   int xoff = x;
   int yoff = y+30;
   strokeWeight(4);
@@ -290,18 +303,32 @@ void sendState(Animation animation) {
 
 void draw() {
   if (mousePressed) { // support dragging
-    if (previewColorPicker != null) {
-      Integer changeColor = previewColorPicker.getColorOverMouse();
+    if (previewPrimaryColorPicker != null) {
+      Integer changeColor = previewPrimaryColorPicker.getColorOverMouse();
       if (changeColor != null) {
         preview.primaryColor = changeColor;
-        println("preview color change: "+changeColor);
+        println("preview primary color change: "+changeColor);
       }
     }
-    if (liveColorPicker != null) {
-      Integer changeColor = liveColorPicker.getColorOverMouse();
+    if (previewSecondaryColorPicker != null) {
+      Integer changeColor = previewSecondaryColorPicker.getColorOverMouse();
+      if (changeColor != null) {
+        preview.secondaryColor = changeColor;
+        println("preview secondary color change: "+changeColor);
+      }
+    }
+    if (livePrimaryColorPicker != null) {
+      Integer changeColor = livePrimaryColorPicker.getColorOverMouse();
       if (changeColor != null) {
         live.primaryColor = changeColor;
-        println("live color change: "+changeColor);
+        println("live primary color change: "+changeColor);
+      }
+    }
+    if (liveSecondaryColorPicker != null) {
+      Integer changeColor = liveSecondaryColorPicker.getColorOverMouse();
+      if (changeColor != null) {
+        live.secondaryColor = changeColor;
+        println("live secondary color change: "+changeColor);
       }
     }
   }
@@ -312,8 +339,12 @@ void draw() {
   preview.tick();
   live.tick();
 
-  drawDemo("preview", preview, previewColorPicker, leftPaneX, 30, paneWidth, paneHeight);
-  drawDemo("live", live, liveColorPicker, rightPaneX, 30, paneWidth, paneHeight);
+  drawDemo("preview", preview, previewPrimaryColorPicker,
+           previewSecondaryColorPicker, leftPaneX, 30,
+           paneWidth, paneHeight);
+  drawDemo("live", live, livePrimaryColorPicker,
+           liveSecondaryColorPicker, rightPaneX, 30,
+           paneWidth, paneHeight);
   sendState(live);
   //println("frameRate: "+frameRate);
 }

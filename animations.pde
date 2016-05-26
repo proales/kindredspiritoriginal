@@ -18,6 +18,7 @@ class Animation {
   int logicalClock;
   int lastFrameCount;
   public Integer primaryColor;
+  public Integer secondaryColor;
   VirtualPixel pixels[];
   Animation() {
     // each animation gets a deep copy of the KS pixel model
@@ -50,7 +51,6 @@ class OffAnimation extends Animation {
   OffAnimation() {
     name = "off";
     speedPct = 50;
-    primaryColor = null;
   }
 }
 
@@ -58,7 +58,6 @@ class ThumperAnimation extends Animation {
   final int thumperPurple = 0x660E6F;
   ThumperAnimation() {
     name = "thumper";
-    primaryColor = null;
     speedPct = 50;
   }
   void tick() {
