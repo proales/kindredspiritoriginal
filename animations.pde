@@ -112,6 +112,7 @@ class ScanAnimation extends Animation {
   ScanAnimation() {
     name = "scan";
     primaryColor = 0x009900;
+    secondaryColor = 0x000000;
   }
   void tick() {
     super.tick();
@@ -125,7 +126,7 @@ class ScanAnimation extends Animation {
       if (vp.coord.x >= xActiveStart && vp.coord.x < xActiveEnd) {
         vp.currentColor = primaryColor;
       } else {
-        vp.currentColor = 0x000000;
+        vp.currentColor = secondaryColor;
       }
     }
   }

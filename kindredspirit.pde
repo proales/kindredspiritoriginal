@@ -156,7 +156,7 @@ void setLiveAnimation(int index) {
   }
   if (live.secondaryColor != null) {
     liveSecondaryColorPicker = placeColorPicker(rightPaneX+colorPickerWidth);
-    live.secondaryColor = preview.primaryColor;
+    live.secondaryColor = preview.secondaryColor;
   } else {
     liveSecondaryColorPicker = null;
   }
