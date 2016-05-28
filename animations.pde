@@ -64,13 +64,13 @@ class ThumperAnimation extends Animation {
     super.tick();
     // rain effect
     int numBuckets = pixelsPerStrip;
-    int yRange = maxY - minY;
+    float yRange = maxY - minY;
     int activeBucket = logicalClock % numBuckets;
-    float bucketHeight = float(yRange) / float(numBuckets);
+    float bucketHeight = yRange / float(numBuckets);
     float yActiveStart = minY + (activeBucket*bucketHeight);
     float yActiveEnd = yActiveStart + bucketHeight;
     for (VirtualPixel vp : pixels) {
-      if (vp.y >= yActiveStart && vp.y < yActiveEnd) {
+      if (vp.coord.y >= yActiveStart && vp.coord.y < yActiveEnd) {
         vp.currentColor = thumperPurple;
       } else {
         vp.currentColor = 0x000000;
@@ -116,9 +116,9 @@ class ScanAnimation extends Animation {
   void tick() {
     super.tick();
     int numBuckets = 100;
-    int xRange = maxX - minX;
+    float xRange = maxX - minX;
     int activeBucket = logicalClock % numBuckets;
-    float bucketHeight = float(xRange) / float(numBuckets);
+    float bucketHeight = xRange / float(numBuckets);
     float xActiveStart = minX + (activeBucket*bucketHeight);
     float xActiveEnd = xActiveStart + bucketHeight;
     for (VirtualPixel vp : pixels) {

@@ -86,7 +86,8 @@ void rasterizeModelToPixels() {
     for (VirtualWayPoint wayPoint : strip.wayPoints) {
       if (prev != null) {
         VirtualWayPoint cur = wayPoint;
-        for (Coordinate coord : line3d(prev.x, prev.y, prev.z, cur.x, cur.y, cur.z)) {
+        for (Coordinate coord : line3d(int(prev.coord.x), int(prev.coord.y), int(prev.coord.z),
+                                       int(cur.coord.x), int(cur.coord.y), int(cur.coord.z))) {
           virtualPixels.add(new VirtualPixel(strip.controllerId, strip.stripId,
                                              pixelId, coord.x, coord.y, coord.z));
           pixelId++;
@@ -121,8 +122,7 @@ void initControllerStripMap() {
     controllerStripMap[vp.controllerId][vp.stripId][vp.pixelId] = i;
   }
   if (maxPixelId >= pixelsPerStrip) {
-    println("*** fatal: maxPixelId("+maxPixelId+") > pixelsPerStrip("+pixelsPerStrip+")");
-    exit(1);
+    println("*** WARNING: maxPixelId("+maxPixelId+") > pixelsPerStrip("+pixelsPerStrip+") !!");
   }
   if (maxControllerId == -1 || maxStripId == -1 || maxPixelId == -1) {
     println("*** fatal: maxControllerId("+maxControllerId+") or StripId("

@@ -28,7 +28,7 @@ class Coordinate {
     this.y = y;
     this.z = z;
   }
-  float distance(Coordindate b) {
+  float distance(Coordinate b) {
     Coordinate a = this;
     float dx = b.x - a.x;
     float dy = b.y - a.y;
@@ -45,7 +45,7 @@ class VirtualPixel {
   final int pixelId;
   final Coordinate coord;
   int currentColor;
-  VirtualPixel(int controllerId, int stripId, int pixelId, int x, int y, int z) {
+  VirtualPixel(int controllerId, int stripId, int pixelId, float x, float y, float z) {
     this.controllerId = controllerId;
     this.stripId = stripId;
     this.pixelId = pixelId;
@@ -56,7 +56,6 @@ class VirtualPixel {
 
 /* Represents a waypoint in the KS model. */
 class VirtualWayPoint {
-  final int x, y, z;
   final Coordinate coord;
   VirtualWayPoint(int x, int y, int z) {
     this.coord = new Coordinate(x, y, z);
@@ -118,25 +117,6 @@ void loadModel() {
   }
   ksVirtualStrips = virtualStrips.toArray(new VirtualStrip[virtualStrips.size()]);
   println("loadModel: "+ksVirtualStrips.length+" strips loaded");
-}
-
-void initControllerStripMap() {
-  int maxControllerId = -1;
-  int maxStripId = -1;
-  int maxPixelId = -1;
-  for (VirtualPixel vp : ksVirtualPixels) {
-    if (vp.controllerId > maxControllerId) maxControllerId = vp.controllerId;
-    if (vp.stripId > maxStripId) maxStripId = vp.stripId;
-    if (vp.pixelId > maxPixelId) maxPixelId = vp.pixelId;
-  }
-  controllerStripMap = new int[maxControllerId+1][maxStripId+1][maxPixelId+1];
-  for (int i = 0; i < ksVirtualPixels.length; i++) {
-    VirtualPixel vp = ksVirtualPixels[i];
-    controllerStripMap[vp.controllerId][vp.stripId][vp.pixelId] = i;
-  }
-  if (maxPixelId >= pixelsPerStrip) {
-    println("*** maxPixelId("+maxPixelId+") > pixelsPerStrip("+pixelsPerStrip+")");
-  }
 }
 
 Animation live;
@@ -254,7 +234,7 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
     colorPicker.draw();
   } else {
     stroke(0x99, 0x99, 0x99);
-    line(leftSide, colorPickerY, leftSide+colorPickerwWidth, colorPickerY+colorPickerHeight);
+    line(leftSide, colorPickerY, leftSide+colorPickerWidth, colorPickerY+colorPickerHeight);
     line(leftSide+colorPickerWidth, colorPickerY, leftSide, colorPickerY+colorPickerHeight);
   }
 }
@@ -277,7 +257,7 @@ void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
     int g = (c >> 8) & 0xFF;
     int b = c & 0xFF;
     stroke(r, g, b);
-    point(xoff+vpixel.x, yoff+vpixel.y);
+    point(xoff+vpixel.coord.x, yoff+vpixel.coord.y);
   }
   strokeWeight(1);
 }
