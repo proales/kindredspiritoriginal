@@ -19,7 +19,7 @@ final float globalShadeFactor = 0.0; //1.0; //0.85;
 final int globalFrameRate = 30;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
-final int myScreenHeight = 600;
+final int myScreenHeight = 700;
 
 class Coordinate {
   final float x, y, z;
@@ -184,7 +184,7 @@ void setup()  {
   titleFont = createFont("Arial", 16, true);
   subtitleFont = createFont("Arial", 14, true);
   sidebarFont = createFont("Arial", 12, true);
-  size(800, 600);
+  size(800, 700);
   stroke(255);
   background(0, 0, 0);
   frameRate(globalFrameRate);
@@ -240,7 +240,7 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
 }
 
 void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
-              ColorPicker secondaryColorPicker, int x, int y, int w, int _h) {
+              ColorPicker secondaryColorPicker, int x, int y, int w, int h) {
   textFont(subtitleFont);
   fill(255);
   text(which+": "+animation.name, x, y);
@@ -257,7 +257,27 @@ void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
     int g = (c >> 8) & 0xFF;
     int b = c & 0xFF;
     stroke(r, g, b);
-    point(xoff+vpixel.coord.x, yoff+vpixel.coord.y);
+    
+    float flatten_x = 0;
+    float flatten_y = 0;
+    // "squash" the model into 2d space
+    if (vpixel.coord.x >= 0) {
+      if (vpixel.coord.z >= 0) {
+        flatten_x = -vpixel.coord.y;
+        flatten_y = vpixel.coord.x;
+      } else {
+        flatten_x = vpixel.coord.y;
+        flatten_y = -vpixel.coord.x;
+      }
+    } else {
+      println("got point x < 0! ("+vpixel.coord.x+", "+vpixel.coord.y+", "+vpixel.coord.z+")");
+      exit();
+    }
+    if (flatten_y < 0) {
+      point(xoff+(w/2)+flatten_x, yoff-flatten_y);
+    } else {
+      point(xoff+(w/2)+flatten_x, yoff+flatten_y);
+    }
   }
   strokeWeight(1);
 }
