@@ -102,9 +102,9 @@ void loadModel() {
     // approximate 10 pixels per foot, so that's why we multiply by 10.
     for (String point : points) {
       String pos[] = split(trim(point), ',');
-      int x = int(pos[0]) * 10;
-      int y = int(pos[1]) * 10;
-      int z = int(pos[2]) * 10;
+      int x = int(pos[0]);
+      int y = int(pos[1]);
+      int z = int(pos[2]);
       virtualPoints.add(new VirtualWayPoint(x, y, z));
     }
     if (virtualPoints.size() < 2) {
