@@ -1,3 +1,6 @@
+# format:
+# controller_id:strip_id|waypoint0x,waypoint0y,waypoint0z;...;waypointNx,waypointNy,waypointNz
+
 ##
 ## driver side, z-plane: +4 (feet from middle of dance floor)
 ##
