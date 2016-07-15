@@ -260,8 +260,7 @@ void drawDemoControls(String which, Animation animation, ColorPicker primaryColo
   drawColorSelector(animation, secondaryColorPicker, x+colorPickerWidth);
 }
 
-void drawDemoLEDs(String which, Animation animation, ColorPicker primaryColorPicker,
-              ColorPicker secondaryColorPicker, int x, int y, int w, int h) {
+void drawDemoLEDs(Animation animation, int x, int y, int w) {
   int xoff = x;
   int yoff = y+30;
   
@@ -363,12 +362,8 @@ void draw() {
   // point() is ridiculously slow; do this {load,update}Pixels() thing so
   // we can access the pixels[] buffer directly 
   loadPixels();
-  drawDemoLEDs("preview", preview, previewPrimaryColorPicker,
-           previewSecondaryColorPicker, leftPaneX, 30,
-           paneWidth, paneHeight);
-  drawDemoLEDs("live", live, livePrimaryColorPicker,
-           liveSecondaryColorPicker, rightPaneX, 30,
-           paneWidth, paneHeight);
+  drawDemoLEDs(preview, leftPaneX, 30, paneWidth);
+  drawDemoLEDs(live, rightPaneX, 30, paneWidth);
   updatePixels();
   sendState(live);
   
