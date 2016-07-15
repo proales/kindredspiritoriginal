@@ -17,7 +17,7 @@ class PixelPusherObserver implements Observer {
 }
 
 final float globalShadeFactor = 0.0; //1.0; //0.85;
-final int globalFrameRate = 30;
+final int globalFrameRate = 60;
 final int pixelsPerStrip = 96;
 final int myScreenWidth = 800;
 final int myScreenHeight = 700;
@@ -99,8 +99,6 @@ void loadModel() {
     println("loadModel: controller:strip="+controllerId+":"+stripId);
     String points[] = split(trim(parts[1]), ';');
     List<VirtualWayPoint> virtualPoints = new ArrayList<VirtualWayPoint>();
-    // The unit distance between waypoints is in feet.  In this sketch we
-    // approximate 10 pixels per foot, so that's why we multiply by 10.
     for (String point : points) {
       String pos[] = split(trim(point), ',');
       int x = int(pos[0]);
@@ -240,7 +238,19 @@ void drawColorSelector(Animation a, ColorPicker colorPicker, int leftSide) {
   }
 }
 
-void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
+void drawLED(int x, int y, int c)
+{
+  // draw the point at x,y and also immediately
+  // above and below and to either side
+  // TODO: get fancy and render the neighboring ones a bit darker, maybe
+  pixels[y*width + x] = c;
+  pixels[(y-1)*width + x] = c;
+  pixels[(y+1)*width + x] = c;
+  pixels[y*width + (x-1)] = c;
+  pixels[y*width + (x+1)] = c;
+}
+
+void drawDemoControls(String which, Animation animation, ColorPicker primaryColorPicker,
               ColorPicker secondaryColorPicker, int x, int y, int w, int h) {
   textFont(subtitleFont);
   fill(255);
@@ -248,16 +258,20 @@ void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
   drawSlider(animation, x, w);
   drawColorSelector(animation, primaryColorPicker, x);
   drawColorSelector(animation, secondaryColorPicker, x+colorPickerWidth);
+}
+
+void drawDemoLEDs(String which, Animation animation, ColorPicker primaryColorPicker,
+              ColorPicker secondaryColorPicker, int x, int y, int w, int h) {
   int xoff = x;
   int yoff = y+30;
-  strokeWeight(4);
+  
   for (VirtualPixel vpixel : animation.pixels) {
     int c = vpixel.currentColor;
     if (c == 0) continue; // no need to render black
     int r = (c >> 16) & 0xFF;
     int g = (c >> 8) & 0xFF;
     int b = c & 0xFF;
-    stroke(r, g, b);
+    color col = color(r,g,b);
     
     float flatten_x = 0;
     float flatten_y = 0;
@@ -275,15 +289,15 @@ void drawDemo(String which, Animation animation, ColorPicker primaryColorPicker,
       exit();
     }
     if (flatten_y < 0) {
-      point(xoff+(w/2)+flatten_x, yoff-flatten_y);
+      //point(xoff+(w/2)+flatten_x, yoff-flatten_y);
+      drawLED(int(xoff+(w/2)+flatten_x), int(yoff-flatten_y), col);
     } else {
-      point(xoff+(w/2)+flatten_x, yoff+flatten_y);
+      //point(xoff+(w/2)+flatten_x, yoff+flatten_y);
+      drawLED(int(xoff+(w/2)+flatten_x), int(yoff+flatten_y), col);
     }
   }
-  strokeWeight(1);
 }
-
-
+              
 void sendState(Animation animation) {
   if (!observer.hasStrips) {
     //println("observer.hasStrips is false; no strips available?");
@@ -340,13 +354,24 @@ void draw() {
   preview.tick();
   live.tick();
 
-  drawDemo("preview", preview, previewPrimaryColorPicker,
+  drawDemoControls("preview", preview, previewPrimaryColorPicker,
            previewSecondaryColorPicker, leftPaneX, 30,
            paneWidth, paneHeight);
-  drawDemo("live", live, livePrimaryColorPicker,
+  drawDemoControls("live", live, livePrimaryColorPicker,
            liveSecondaryColorPicker, rightPaneX, 30,
            paneWidth, paneHeight);
+  // point() is ridiculously slow; do this {load,update}Pixels() thing so
+  // we can access the pixels[] buffer directly 
+  loadPixels();
+  drawDemoLEDs("preview", preview, previewPrimaryColorPicker,
+           previewSecondaryColorPicker, leftPaneX, 30,
+           paneWidth, paneHeight);
+  drawDemoLEDs("live", live, livePrimaryColorPicker,
+           liveSecondaryColorPicker, rightPaneX, 30,
+           paneWidth, paneHeight);
+  updatePixels();
   sendState(live);
+  
   //println("frameRate: "+frameRate);
 }
 
