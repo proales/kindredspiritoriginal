@@ -54,6 +54,28 @@ class OffAnimation extends Animation {
   }
 }
 
+// show the KS brand colors
+class BrandAnimation extends Animation {
+  final int shoulderColor = 0x009900;
+  final int bodyColor = 0x8B008B;
+
+  BrandAnimation() {
+    name = "brand";
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      // make this a diagonal
+      if (vp.coord.x < divider(int(vp.coord.y))) {
+        vp.currentColor = shoulderColor;
+      } else {
+        vp.currentColor = bodyColor;
+      }
+    }
+  }
+  int divider(int y) {
+    return -y + 275;
+  }
+}
+
 class ThumperAnimation extends Animation {
   final int thumperPurple = 0x660E6F;
   ThumperAnimation() {
@@ -172,6 +194,7 @@ String animations[] = {
   "off",
   "solid",
   "solidglow",
+  "brand",
   "scan",
   "noise",
   "randomnoise",
@@ -183,6 +206,7 @@ Animation createAnimation(int i) {
   case "off"    : return new OffAnimation();
   case "solid"  : return new SolidAnimation();
   case "solidglow" : return new SolidGlowAnimation();
+  case "brand" : return new BrandAnimation();
   case "scan"   : return new ScanAnimation();
   case "noise"  : return new NoiseAnimation();
   case "randomnoise"  : return new RandomNoiseAnimation();
