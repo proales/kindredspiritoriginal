@@ -56,18 +56,20 @@ class OffAnimation extends Animation {
 
 // show the KS brand colors
 class BrandAnimation extends Animation {
-  final int shoulderColor = 0x009900;
-  final int bodyColor = 0x8B008B;
 
   BrandAnimation() {
     name = "brand";
+    primaryColor = 0x009900;
+    secondaryColor = 0x8B008B;
+  }
+  void tick() {
     super.tick();
     for (VirtualPixel vp : pixels) {
       // make this a diagonal
       if (vp.coord.x < divider(int(vp.coord.y))) {
-        vp.currentColor = shoulderColor;
+        vp.currentColor = primaryColor;
       } else {
-        vp.currentColor = bodyColor;
+        vp.currentColor = secondaryColor;
       }
     }
   }
