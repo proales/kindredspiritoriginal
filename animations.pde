@@ -192,6 +192,63 @@ class RandomNoiseAnimation extends Animation {
   }
 }
 
+class RadiateDJAnimation extends Animation {
+  RadiateDJAnimation() {
+    name = "radiate-dj";
+    primaryColor = 0x990000;
+    secondaryColor = 0x0;
+    speedPct=75;
+  }
+  int djX = 210;
+  int djY = 30;
+  int djZ = 30;
+  void tick() {
+    super.tick();
+    int i = logicalClock % 150;
+    for (VirtualPixel vp : pixels) {
+      float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
+      if (d >= i && d < i+40) {
+        vp.currentColor = primaryColor;
+      } else if (d >= (i+40) && d < (i+80)) {
+        vp.currentColor = secondaryColor;  
+      } else {
+        vp.currentColor = 0x0;
+      }
+    }
+  }
+}
+
+class RadiateRandAnimation extends Animation {
+  RadiateRandAnimation() {
+    name = "radiate-rnd";
+    primaryColor = 0x990000;
+    secondaryColor = 0x0;
+    speedPct=75;
+  }
+  int djX = 210;
+  int djY = 30;
+  int djZ = 30;
+  void tick() {
+    super.tick();
+    if (logicalClock % 150 == 0) {
+      djX = (int)random(minX, maxX);
+      djY = (int)random(minY, maxY);
+      djZ = (int)random(-40, 40);
+    }
+    int i = logicalClock % 150;
+    for (VirtualPixel vp : pixels) {
+      float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
+      if (d >= i && d < i+40) {
+        vp.currentColor = primaryColor;
+      } else if (d >= (i+40) && d < (i+80)) {
+        vp.currentColor = secondaryColor;  
+      } else {
+        vp.currentColor = 0x0;
+      }
+    }
+  }
+}
+
 String animations[] = {
   "off",
   "solid",
@@ -201,6 +258,8 @@ String animations[] = {
   "noise",
   "randomnoise",
   "thumper",
+  "radiate-dj",
+  "radiate-rnd",
 };
 
 Animation createAnimation(int i) {
@@ -213,6 +272,8 @@ Animation createAnimation(int i) {
   case "noise"  : return new NoiseAnimation();
   case "randomnoise"  : return new RandomNoiseAnimation();
   case "thumper": return new ThumperAnimation();
+  case "radiate-dj": return new RadiateDJAnimation();
+  case "radiate-rnd":return new RadiateRandAnimation();
   default:
     println("*** unknown animation: "+animations[i]);
     exit();
