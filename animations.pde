@@ -223,17 +223,21 @@ class RadiateRandAnimation extends Animation {
     name = "radiate-rnd";
     primaryColor = 0x990000;
     secondaryColor = 0x0;
-    speedPct=75;
+    speedPct = 75;
+    randomSpot();
   }
-  int djX = 210;
-  int djY = 30;
-  int djZ = 30;
+  int djX;
+  int djY;
+  int djZ;
+  void randomSpot() {
+    djX = (int)random(minX, maxX);
+    djY = (int)random(minY, maxY);
+    djZ = (int)random(-40, 40);
+  }
   void tick() {
     super.tick();
     if (logicalClock % 150 == 0) {
-      djX = (int)random(minX, maxX);
-      djY = (int)random(minY, maxY);
-      djZ = (int)random(-40, 40);
+      randomSpot();
     }
     int i = logicalClock % 150;
     for (VirtualPixel vp : pixels) {
