@@ -130,3 +130,12 @@ void initControllerStripMap() {
     exit();
   }
 }
+
+void dumpControllerStripMap(String file)
+{
+  List<String> strings = new ArrayList<String>();
+  for (VirtualPixel vp : ksVirtualPixels) {
+    strings.add(vp.coord.x+","+vp.coord.y+","+vp.coord.z+":"+vp.controllerId+":"+vp.stripId);
+  }
+  saveStrings(file, strings);
+}

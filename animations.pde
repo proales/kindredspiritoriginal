@@ -204,7 +204,7 @@ class RadiateDJAnimation extends Animation {
   int djZ = 30;
   void tick() {
     super.tick();
-    int i = logicalClock % 180;
+    int i = logicalClock % 200;
     for (VirtualPixel vp : pixels) {
       float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
       if (d >= i && d < i+40) {
@@ -239,7 +239,7 @@ class RadiateRandAnimation extends Animation {
     if (logicalClock % 180 == 0) {
       randomSpot();
     }
-    int i = logicalClock % 150;
+    int i = logicalClock % 200;
     for (VirtualPixel vp : pixels) {
       float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
       if (d >= i && d < i+40) {

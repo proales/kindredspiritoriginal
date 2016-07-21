@@ -263,7 +263,7 @@ void drawDemoControls(String which, Animation animation, ColorPicker primaryColo
 void drawDemoLEDs(Animation animation, int x, int y, int w) {
   int xoff = x;
   int yoff = y+30;
-  
+
   for (VirtualPixel vpixel : animation.pixels) {
     int c = vpixel.currentColor;
     if (c == 0) continue; // no need to render black
@@ -271,7 +271,7 @@ void drawDemoLEDs(Animation animation, int x, int y, int w) {
     int g = (c >> 8) & 0xFF;
     int b = c & 0xFF;
     color col = color(r,g,b);
-    
+
     float flatten_x = 0;
     float flatten_y = 0;
     // "squash" the model into 2d space
@@ -291,13 +291,13 @@ void drawDemoLEDs(Animation animation, int x, int y, int w) {
         drawLED(int(xoff+(w/2)+flatten_x), int((yoff+100)+flatten_y), col);
       }
     } else {
-      flatten_x = vpixel.coord.z;
-      flatten_y = vpixel.coord.y;
+      flatten_x = -vpixel.coord.z;
+      flatten_y = 140-vpixel.coord.y;
       drawLED(int(xoff+(w/2)+flatten_x), int(yoff+flatten_y), col);
     }
   }
 }
-              
+
 void sendState(Animation animation) {
   if (!observer.hasStrips) {
     //println("observer.hasStrips is false; no strips available?");
@@ -361,13 +361,13 @@ void draw() {
            liveSecondaryColorPicker, rightPaneX, 30,
            paneWidth, paneHeight);
   // point() is ridiculously slow; do this {load,update}Pixels() thing so
-  // we can access the pixels[] buffer directly 
+  // we can access the pixels[] buffer directly
   loadPixels();
   drawDemoLEDs(preview, leftPaneX, 30, paneWidth);
   drawDemoLEDs(live, rightPaneX, 30, paneWidth);
   updatePixels();
   sendState(live);
-  
+
   //println("frameRate: "+frameRate);
 }
 
@@ -390,6 +390,10 @@ void keyPressed() {
         break;
       }
     }
+  } else if (key == 'm') {
+    String file = "/tmp/vertices.txt";
+    dumpControllerStripMap(file);
+    println("** dumped controller-strip-vertex map to "+file);
   } else {
     println("unknown keyPressed: "+key);
   }
