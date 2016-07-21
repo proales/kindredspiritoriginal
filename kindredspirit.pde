@@ -283,15 +283,16 @@ void drawDemoLEDs(Animation animation, int x, int y, int w) {
         flatten_x = vpixel.coord.y;
         flatten_y = -vpixel.coord.x;
       }
+      if (flatten_y < 0) {
+        //point(xoff+(w/2)+flatten_x, yoff-flatten_y);
+        drawLED(int(xoff+(w/2)+flatten_x), int((yoff+100)-flatten_y), col);
+      } else {
+        //point(xoff+(w/2)+flatten_x, yoff+flatten_y);
+        drawLED(int(xoff+(w/2)+flatten_x), int((yoff+100)+flatten_y), col);
+      }
     } else {
-      println("got point x < 0! ("+vpixel.coord.x+", "+vpixel.coord.y+", "+vpixel.coord.z+")");
-      exit();
-    }
-    if (flatten_y < 0) {
-      //point(xoff+(w/2)+flatten_x, yoff-flatten_y);
-      drawLED(int(xoff+(w/2)+flatten_x), int(yoff-flatten_y), col);
-    } else {
-      //point(xoff+(w/2)+flatten_x, yoff+flatten_y);
+      flatten_x = vpixel.coord.z;
+      flatten_y = vpixel.coord.y;
       drawLED(int(xoff+(w/2)+flatten_x), int(yoff+flatten_y), col);
     }
   }
