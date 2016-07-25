@@ -103,7 +103,7 @@ void rasterizeModelToPixels() {
     }
   }
   ksVirtualPixels = virtualPixels.toArray(new VirtualPixel[virtualPixels.size()]);
-  println("rasterizeModelToPixels: "+ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
+  println(ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
   println("number of strips > 10 feet: "+numOversizedStrips);
 
   for (VirtualPixel vp : ksVirtualPixels) {
