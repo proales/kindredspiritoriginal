@@ -11,11 +11,11 @@
 0:2|140,110,40;80,130,40;70,70,40;60,80,40
 0:3|120,120,40;130,130,40;140,110,40;160,130,40;190,115,40
 0:4|140,90,40;110,20,40;80,130,40
-# ^^ this one is 182 pixels long; maybe connect two 10' LED strips together instead?
+# ^^ this one is 182 pixels long (>15'); maybe connect two 10' LED strips together instead?
 0:5|170,70,40;110,10,40;100,20,40;90,10,40
 0:6|140,90,40;90,80,40;30,10,40
 0:7|140,90,40;60,60,40;65,10,40;30,40,40
-# ^^ this one is 168 pixels long; maybe connect two 10' LED strips together instead?
+# ^^ this one is 168 pixels long (>15'); maybe connect two 10' LED strips together instead?
 
 # controller 1, driver side, rear
 1:0|250,90,40;260,110,40;270,90,40;310,90,40
