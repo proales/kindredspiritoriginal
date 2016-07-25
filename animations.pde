@@ -257,19 +257,20 @@ class RadiateRandAnimation extends Animation {
 
 class RadiateSubwoofers extends Animation {
   RadiateSubwoofers() {
-    name = "radiate-subs";
-    //primaryColor = 0x000099;
-    //secondaryColor = 0x0;
+    name = "radiate-bass";
     speedPct = 75;
+    // TODO: actually use the speed setting, right now it radiates very slowly
+    //   (default speed is about ~60 pixels/second, the frame rate)
   }
   int subX = 210;
-  int subY = 30;
-  int subZ = 100;
+  int subY = 110;
+  int subZ = 30;
   void tick() {
     super.tick();
     for (VirtualPixel vp : pixels) {
       int d = int(dist(vp, subX, subY, subZ));
-      vp.currentColor = int(getSpectroAtDistance(d));
+      int g = int(getSpectroAtDistance(d) * 1.5);
+      vp.currentColor = makeRGB(0,g,0);
     }
   }
 }
@@ -285,7 +286,7 @@ String animations[] = {
   "thumper",
   "radiate-dj",
   "radiate-rnd",
-  "radiate-subs",
+  "radiate-bass",
 };
 
 Animation createAnimation(int i) {
@@ -300,7 +301,7 @@ Animation createAnimation(int i) {
   case "thumper": return new ThumperAnimation();
   case "radiate-dj": return new RadiateDJAnimation();
   case "radiate-rnd":return new RadiateRandAnimation();
-  case "radiate-subs":return new RadiateSubwoofers();
+  case "radiate-bass":return new RadiateSubwoofers();
   default:
     println("*** unknown animation: "+animations[i]);
     exit();

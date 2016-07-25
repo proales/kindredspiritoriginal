@@ -177,7 +177,6 @@ void setPreviewAnimation(int index) {
 }
 
 void setup() {
-  setupSpectro();
   loadModel();
   rasterizeModelToPixels();
   initControllerStripMap();
@@ -193,6 +192,7 @@ void setup() {
   registry = new DeviceRegistry();
   observer = new PixelPusherObserver();
   registry.addObserver(observer);
+  setupSpectro();
 }
 
 void drawTitle() {
