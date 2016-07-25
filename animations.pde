@@ -192,6 +192,10 @@ class RandomNoiseAnimation extends Animation {
   }
 }
 
+float dist(VirtualPixel vp, float x, float y, float z) {
+  return sqrt(pow(x-vp.coord.x, 2) + pow(y-vp.coord.y, 2) + pow(z-vp.coord.z, 2));
+}
+
 class RadiateDJAnimation extends Animation {
   RadiateDJAnimation() {
     name = "radiate-dj";
@@ -206,11 +210,11 @@ class RadiateDJAnimation extends Animation {
     super.tick();
     int i = logicalClock % 200;
     for (VirtualPixel vp : pixels) {
-      float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
+      float d = dist(vp, djX, djY, djZ);
       if (d >= i && d < i+40) {
         vp.currentColor = primaryColor;
       } else if (d >= (i+40) && d < (i+80)) {
-        vp.currentColor = secondaryColor;  
+        vp.currentColor = secondaryColor;
       } else {
         vp.currentColor = 0x0;
       }
@@ -226,9 +230,7 @@ class RadiateRandAnimation extends Animation {
     speedPct = 75;
     randomSpot();
   }
-  int djX;
-  int djY;
-  int djZ;
+  int djX, djY, djZ;
   void randomSpot() {
     djX = (int)random(minX, maxX);
     djY = (int)random(minY, maxY);
@@ -241,14 +243,33 @@ class RadiateRandAnimation extends Animation {
     }
     int i = logicalClock % 200;
     for (VirtualPixel vp : pixels) {
-      float d = sqrt(pow(djX-vp.coord.x,2) + pow(djY-vp.coord.y,2) + pow(djZ-vp.coord.z,2));
+      float d = dist(vp, djX, djY, djZ);
       if (d >= i && d < i+40) {
         vp.currentColor = primaryColor;
       } else if (d >= (i+40) && d < (i+80)) {
-        vp.currentColor = secondaryColor;  
+        vp.currentColor = secondaryColor;
       } else {
         vp.currentColor = 0x0;
       }
+    }
+  }
+}
+
+class RadiateSubwoofers extends Animation {
+  RadiateSubwoofers() {
+    name = "radiate-subs";
+    //primaryColor = 0x000099;
+    //secondaryColor = 0x0;
+    speedPct = 75;
+  }
+  int subX = 210;
+  int subY = 30;
+  int subZ = 100;
+  void tick() {
+    super.tick();
+    for (VirtualPixel vp : pixels) {
+      int d = int(dist(vp, subX, subY, subZ));
+      vp.currentColor = int(getSpectroAtDistance(d));
     }
   }
 }
@@ -264,6 +285,7 @@ String animations[] = {
   "thumper",
   "radiate-dj",
   "radiate-rnd",
+  "radiate-subs",
 };
 
 Animation createAnimation(int i) {
@@ -278,6 +300,7 @@ Animation createAnimation(int i) {
   case "thumper": return new ThumperAnimation();
   case "radiate-dj": return new RadiateDJAnimation();
   case "radiate-rnd":return new RadiateRandAnimation();
+  case "radiate-subs":return new RadiateSubwoofers();
   default:
     println("*** unknown animation: "+animations[i]);
     exit();

@@ -176,7 +176,8 @@ void setPreviewAnimation(int index) {
   }
 }
 
-void setup()  {
+void setup() {
+  setupSpectro();
   loadModel();
   rasterizeModelToPixels();
   initControllerStripMap();
@@ -351,6 +352,7 @@ void draw() {
   drawTitle();
   drawSidebar();
 
+  tickSpectro();
   preview.tick();
   live.tick();
 
@@ -397,4 +399,9 @@ void keyPressed() {
   } else {
     println("unknown keyPressed: "+key);
   }
+}
+
+void stop() {
+  stopSpectro();
+  super.stop();
 }
