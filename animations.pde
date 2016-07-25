@@ -87,7 +87,7 @@ class ThumperAnimation extends Animation {
   void tick() {
     super.tick();
     // rain effect
-    int numBuckets = pixelsPerStrip;
+    int numBuckets = 100;
     float yRange = maxY - minY;
     int activeBucket = logicalClock % numBuckets;
     float bucketHeight = yRange / float(numBuckets);

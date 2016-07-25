@@ -79,6 +79,7 @@ List<Coordinate> line3d(int startx, int starty, int startz, int endx, int endy, 
 }
 
 void rasterizeModelToPixels() {
+  int numOversizedStrips = 0;
   List<VirtualPixel> virtualPixels = new ArrayList<VirtualPixel>();
   for (VirtualStrip strip : ksVirtualStrips) {
     VirtualWayPoint prev = null;
@@ -95,9 +96,15 @@ void rasterizeModelToPixels() {
       }
       prev = wayPoint;
     }
+    if (pixelId > 96) {
+      // 10' strips have 96 pixels, 15' strips have more
+      println("controller "+strip.controllerId+", strip "+strip.stripId+", has "+pixelId+" pixels (>96)");
+      numOversizedStrips++;
+    }
   }
   ksVirtualPixels = virtualPixels.toArray(new VirtualPixel[virtualPixels.size()]);
   println("rasterizeModelToPixels: "+ksVirtualStrips.length+" strips to "+ksVirtualPixels.length+" pixels");
+  println("number of strips > 10 feet: "+numOversizedStrips);
 
   for (VirtualPixel vp : ksVirtualPixels) {
     if (vp.coord.y > maxY) maxY = vp.coord.y;
@@ -111,6 +118,7 @@ void initControllerStripMap() {
   int maxControllerId = -1;
   int maxStripId = -1;
   int maxPixelId = -1;
+
   for (VirtualPixel vp : ksVirtualPixels) {
     if (vp.controllerId > maxControllerId) maxControllerId = vp.controllerId;
     if (vp.stripId > maxStripId) maxStripId = vp.stripId;
@@ -120,9 +128,6 @@ void initControllerStripMap() {
   for (int i = 0; i < ksVirtualPixels.length; i++) {
     VirtualPixel vp = ksVirtualPixels[i];
     controllerStripMap[vp.controllerId][vp.stripId][vp.pixelId] = i;
-  }
-  if (maxPixelId >= pixelsPerStrip) {
-    println("*** WARNING: maxPixelId("+maxPixelId+") > pixelsPerStrip("+pixelsPerStrip+") !!");
   }
   if (maxControllerId == -1 || maxStripId == -1 || maxPixelId == -1) {
     println("*** fatal: maxControllerId("+maxControllerId+") or StripId("
