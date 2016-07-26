@@ -1,4 +1,7 @@
 controller=4
+ether=10.1.1.104
+netmask=255.255.255.0
+gateway=10.1.1.1
 
 pixels=144
 stripsattached=8
