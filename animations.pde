@@ -42,8 +42,15 @@ class Animation {
     logicalClock++;
   }
   int getPixelColor(int controller, int strip, int index) {
-    int i = controllerStripMap[controller][strip][index];
-    return pixels[i].currentColor;
+    try {
+      int i = controllerStripMap[controller][strip][index];
+      return pixels[i].currentColor;
+    } catch (ArrayIndexOutOfBoundsException e) {
+      // more strip can be connected then we know about
+      // return black for now
+      // TODO: maybe a sickly weird color so we know the strip is unrecognized?
+      return -1;
+    }
   }
 }
 

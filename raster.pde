@@ -114,10 +114,11 @@ void rasterizeModelToPixels() {
   }
 }
 
+int maxControllerId = -1;
+int maxStripId = -1;
+int maxPixelId = -1;
+
 void initControllerStripMap() {
-  int maxControllerId = -1;
-  int maxStripId = -1;
-  int maxPixelId = -1;
 
   for (VirtualPixel vp : ksVirtualPixels) {
     if (vp.controllerId > maxControllerId) maxControllerId = vp.controllerId;

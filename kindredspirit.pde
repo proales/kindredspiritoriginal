@@ -307,9 +307,11 @@ void sendState(Animation animation) {
   registry.setAutoThrottle(true);
   for (Strip strip : registry.getStrips()) {
     int controllerId = strip.getPusher().getControllerOrdinal();
+    if (controllerId > maxControllerId) continue;
     int stripId = strip.getStripNumber();
     for (int i = 0; i < strip.getLength(); i++) {
       int c = animation.getPixelColor(controllerId, stripId, i);
+      if (c == -1) continue;
       strip.setPixel(shade(c, globalShadeFactor), i);
     }
   }
