@@ -309,10 +309,19 @@ void sendState(Animation animation) {
     int controllerId = strip.getPusher().getControllerOrdinal();
     if (controllerId > maxControllerId) continue;
     int stripId = strip.getStripNumber();
+    int pixelIndex = 0;
+    int c = 0;
+    // TODO: use the length of the strip in the model rather than asking the
+    // controller how long it thinks the strips are
     for (int i = 0; i < strip.getLength(); i++) {
-      int c = animation.getPixelColor(controllerId, stripId, i);
-      if (c == -1) continue;
-      strip.setPixel(shade(c, globalShadeFactor), i);
+      try {
+        pixelIndex = controllerStripMap[controllerId][stripId][i];
+        c = animation.pixels[pixelIndex].currentColor;
+        // TODO: track a prevColor so that we don't strip.setPixel unless it changed?
+        strip.setPixel(shade(c, globalShadeFactor), i);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        // skip LED strips that aren't specified in the model
+      }
     }
   }
 }
