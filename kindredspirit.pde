@@ -17,6 +17,8 @@ class PixelPusherObserver implements Observer {
 }
 
 final float globalShadeFactor = 0.0; //1.0; //0.85;
+
+// my late 2011 MacBook Pro can easily handle 60fps
 final int globalFrameRate = 60;
 final int myScreenWidth = 800;
 final int myScreenHeight = 700;
