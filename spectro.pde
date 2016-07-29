@@ -14,13 +14,15 @@ float spectro_fade = 0.9;
 
 void setupSpectro() {
   minim = new Minim(this);
+  // this works on my Linux Thinkpad but not on my MacBook Pro 2011
+  // still debugging
   source = minim.getLineIn(2, 1024);
   fft = new FFT(source.bufferSize(), source.sampleRate());
   fft_spec_size = fft.specSize() / 7; // hax
   spectro = new float[radius];
   bands_per_val = max(fft_spec_size / hn, 1);
   spectro_i = 0;
-  println("sampleRate: "+source.sampleRate());
+  println("*** sampleRate: "+source.sampleRate());
 }
 
 void tickSpectro() {
