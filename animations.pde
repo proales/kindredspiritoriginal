@@ -128,6 +128,22 @@ class SolidGlowAnimation extends Animation {
   }
 }
 
+class SolidGlowRandAnimation extends Animation {
+  int glowColor = (int)random(0xFFFFFF);
+  SolidGlowRandAnimation() {
+    name = "solidglow-rnd";
+  }
+  void tick() {
+    super.tick();
+    int phase = logicalClock % 200;
+    if (phase == 0) { glowColor = (int)random(0xFFFFFF); }
+    if (phase > 100) { phase = 100 - (phase-100); }
+    int c = shade(glowColor, 1.0 - (float(phase) / 100.0));
+    for (VirtualPixel vp : pixels) {
+      vp.currentColor = c;
+    }
+  }
+}
 class ScanAnimation extends Animation {
   ScanAnimation() {
     name = "scan";
@@ -275,6 +291,7 @@ String animations[] = {
   "off",
   "solid",
   "solidglow",
+  "solidglow-rnd",
   "brand",
   "scan",
   "noise",
@@ -290,6 +307,7 @@ Animation createAnimation(int i) {
   case "off"    : return new OffAnimation();
   case "solid"  : return new SolidAnimation();
   case "solidglow" : return new SolidGlowAnimation();
+  case "solidglow-rnd": return new SolidGlowRandAnimation();
   case "brand" : return new BrandAnimation();
   case "scan"   : return new ScanAnimation();
   case "noise"  : return new NoiseAnimation();
